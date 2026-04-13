@@ -1,6 +1,53 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function login(page: Page) {
+  await page.goto('/');
+  await page.getByLabel(/adresse e-mail|email address/i).fill('marie.dupont@engie.com');
+  await page.getByLabel(/mot de passe|password/i).fill('Gén!e-ENGIE_2026$');
+  await page.getByRole('button', { name: /se connecter|sign in/i }).click();
+  await expect(page.getByText(/demo|démo/i).first()).toBeVisible({ timeout: 10_000 });
+}
+
+test.describe('ENGIE Portal - Login', () => {
+  test('shows login page on first visit', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText(/espace client|customer portal/i)).toBeVisible();
+    await expect(page.getByLabel(/adresse e-mail|email address/i)).toBeVisible();
+    await expect(page.getByLabel(/mot de passe|password/i)).toBeVisible();
+  });
+
+  test('rejects invalid credentials', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel(/adresse e-mail|email address/i).fill('bad@email.com');
+    await page.getByLabel(/mot de passe|password/i).fill('wrong');
+    await page.getByRole('button', { name: /se connecter|sign in/i }).click();
+    await expect(page.getByText(/identifiants incorrects|invalid credentials/i)).toBeVisible();
+  });
+
+  test('logs in with valid credentials', async ({ page }) => {
+    await login(page);
+    await expect(page.getByText('Marie Dupont')).toBeVisible();
+  });
+
+  test('session persists on page reload', async ({ page }) => {
+    await login(page);
+    await page.reload();
+    await expect(page.getByText(/demo|démo/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByLabel(/adresse e-mail|email address/i)).not.toBeVisible();
+  });
+
+  test('logout returns to login page', async ({ page }) => {
+    await login(page);
+    await page.getByRole('button', { name: /déconnexion|sign out/i }).click();
+    await expect(page.getByText(/espace client|customer portal/i)).toBeVisible();
+  });
+});
 
 test.describe('ENGIE Portal - Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('loads dashboard by default', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('ENGIE', { exact: true }).first()).toBeVisible();
@@ -41,6 +88,10 @@ test.describe('ENGIE Portal - Navigation', () => {
 });
 
 test.describe('ENGIE Portal - Dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('displays contract overview widget', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('ENGIE-ELEC-2024-78542')).toBeVisible({ timeout: 10_000 });
@@ -61,6 +112,10 @@ test.describe('ENGIE Portal - Dashboard', () => {
 });
 
 test.describe('ENGIE Portal - Contracts', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('lists all contracts with details', async ({ page }) => {
     await page.goto('/contracts');
     await expect(page.getByText('ENGIE-ELEC-2024-78542')).toBeVisible({ timeout: 10_000 });
@@ -82,6 +137,10 @@ test.describe('ENGIE Portal - Contracts', () => {
 });
 
 test.describe('ENGIE Portal - Invoices', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('lists invoices with amounts', async ({ page }) => {
     await page.goto('/invoices');
     await expect(page.getByText('FACT-2026').first()).toBeVisible({ timeout: 10_000 });
@@ -94,6 +153,10 @@ test.describe('ENGIE Portal - Invoices', () => {
 });
 
 test.describe('ENGIE Portal - Profile', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('displays user profile', async ({ page }) => {
     await page.goto('/profile');
     await expect(page.locator('main').getByText('Marie Dupont').first()).toBeVisible();

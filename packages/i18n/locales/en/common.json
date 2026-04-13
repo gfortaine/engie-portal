@@ -20,7 +20,14 @@
     "logout": "Sign out",
     "logoutConfirmTitle": "Sign out",
     "logoutConfirm": "Sign out",
-    "logoutConfirmMessage": "Are you sure you want to sign out?"
+    "logoutConfirmMessage": "Are you sure you want to sign out?",
+    "customerPortal": "Customer Portal",
+    "loginSubtitle": "Sign in to your energy portal",
+    "email": "Email address",
+    "emailPlaceholder": "name@example.com",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalidCredentials": "Invalid credentials. Please try again."
   },
   "nav": {
     "dashboard": "Dashboard",

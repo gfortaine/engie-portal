@@ -20,7 +20,14 @@
     "logout": "Déconnexion",
     "logoutConfirmTitle": "Déconnexion",
     "logoutConfirm": "Se déconnecter",
-    "logoutConfirmMessage": "Êtes-vous sûr de vouloir vous déconnecter ?"
+    "logoutConfirmMessage": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "customerPortal": "Espace Client",
+    "loginSubtitle": "Connectez-vous à votre portail énergie",
+    "email": "Adresse e-mail",
+    "emailPlaceholder": "nom@exemple.com",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "invalidCredentials": "Identifiants incorrects. Veuillez réessayer."
   },
   "nav": {
     "dashboard": "Tableau de bord",

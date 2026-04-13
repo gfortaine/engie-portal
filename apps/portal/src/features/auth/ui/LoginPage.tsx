@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NJButton, NJFormItem, NJInlineMessage } from '@engie-group/fluid-design-system-react';
 import { useAppDispatch } from '@/app/providers/store';
 import { setUser } from '../model/authSlice';
@@ -17,6 +18,7 @@ const MOCK_USER = {
 };
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +30,7 @@ export function LoginPage() {
       sessionStorage.setItem('genie-auth', 'true');
       dispatch(setUser(MOCK_USER));
     } else {
-      setError('Identifiants incorrects. Veuillez réessayer.');
+      setError(t('auth.invalidCredentials'));
     }
   }
 
@@ -44,23 +46,23 @@ export function LoginPage() {
           className="login-logo"
         />
 
-        <h1 className="login-title">Espace Client</h1>
-        <p className="login-subtitle">Connectez-vous à votre portail énergie</p>
+        <h1 className="login-title">{t('auth.customerPortal')}</h1>
+        <p className="login-subtitle">{t('auth.loginSubtitle')}</p>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <NJFormItem
             id="login-email"
-            label="Adresse e-mail"
+            label={t('auth.email')}
             value={email}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setEmail(e.target.value); setError(''); }}
-            placeholder="nom@exemple.com"
+            placeholder={t('auth.emailPlaceholder')}
             type="email"
             required
           />
 
           <NJFormItem
             id="login-password"
-            label="Mot de passe"
+            label={t('auth.password')}
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPassword(e.target.value); setError(''); }}
             placeholder="••••••••"
@@ -80,7 +82,7 @@ export function LoginPage() {
             variant="brand"
             emphasis="bold"
             className="login-submit"
-            label="Se connecter"
+            label={t('auth.submit')}
           />
         </form>
       </div>
