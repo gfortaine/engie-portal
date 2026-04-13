@@ -116,9 +116,11 @@ function setTitleCache(sessionId: string, title: string) {
 
 /** Convert Vertex AI session events to AI SDK UIMessage format */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function eventsToMessages(events: Array<{ author: string; content: { parts: Array<{ text: string }> } }>): Array<{ id: string; role: 'user' | 'assistant'; parts: Array<any> }> {
-  return events.map((evt, i) => {
-    const rawText = evt.content.parts.map(p => p.text).join('\n');
+function eventsToMessages(events: Array<{ author: string; content?: { parts?: Array<{ text: string }> } }>): Array<{ id: string; role: 'user' | 'assistant'; parts: Array<any> }> {
+  return events
+    .filter(evt => evt.content?.parts?.length)
+    .map((evt, i) => {
+    const rawText = evt.content!.parts!.map(p => p.text ?? '').join('\n');
     const role = evt.author === 'user' ? 'user' as const : 'assistant' as const;
 
     // Detect JSON-encoded events (rich messages with tool results)
@@ -150,7 +152,7 @@ function eventsToMessages(events: Array<{ author: string; content: { parts: Arra
     return {
       id: `restored-${i}`,
       role,
-      parts: evt.content.parts.map(p => ({ type: 'text' as const, text: p.text })),
+      parts: evt.content!.parts!.map(p => ({ type: 'text' as const, text: p.text ?? '' })),
     };
   });
 }
