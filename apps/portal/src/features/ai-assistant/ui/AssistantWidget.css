@@ -503,6 +503,106 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* ── Session History Drawer ─────────────────────────────────────── */
+.genie-history {
+  background: var(--nj-semantic-color-background-secondary, #f5f5f5);
+  border-bottom: 1px solid var(--nj-semantic-color-border-subtle, #e0e0e0);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.genie-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+
+.genie-history__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nj-semantic-color-text-neutral-primary-default, #333);
+  margin: 0;
+}
+
+.genie-history__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--nj-semantic-color-text-neutral-secondary-default, #666);
+  font-size: 14px;
+  padding: 2px 6px;
+}
+
+.genie-history__list {
+  padding: 0 8px 8px;
+}
+
+.genie-history__empty {
+  text-align: center;
+  color: var(--nj-semantic-color-text-neutral-secondary-default, #999);
+  font-size: 13px;
+  padding: 16px 0;
+}
+
+.genie-history__item {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.genie-history__item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.genie-history__item--active {
+  background: rgba(0, 127, 163, 0.08);
+  border: 1px solid rgba(0, 127, 163, 0.2);
+}
+
+.genie-history__item-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.genie-history__item-date {
+  font-size: 12px;
+  color: var(--nj-semantic-color-text-neutral-secondary-default, #666);
+}
+
+.genie-history__item-id {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nj-semantic-color-text-neutral-primary-default, #333);
+}
+
+.genie-history__item-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--nj-semantic-color-text-neutral-secondary-default, #999);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.genie-history__item:hover .genie-history__item-delete {
+  opacity: 1;
+}
+
+.genie-history__item-delete:hover {
+  color: var(--nj-semantic-color-text-feedback-danger, #d32f2f);
+}
+
 /* ── HITL Approval Card ────────────────────────────────────────── */
 .genie-approval {
   background: #FFF8E1;

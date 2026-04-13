@@ -73,15 +73,16 @@ export interface VertexSession {
   expireTime?: string;
 }
 
-/** Create a new session for a given user */
+/** Create a new session for a given user (expires after 7 days) */
 export async function createSession(
   userId: string,
   sessionId?: string,
 ): Promise<VertexSession> {
   const query = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
+  const expireTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const result = await vertexFetch(`/sessions${query}`, {
     method: 'POST',
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({ userId, expireTime }),
   });
 
   // Operation is async — poll for completion

@@ -97,19 +97,59 @@ function GenieIcon({ size = 24, className = '' }: { size?: number; className?: s
   );
 }
 
+const SESSION_STORAGE_KEY = 'genie-session-id';
+const SESSION_HISTORY_KEY = 'genie-sessions';
+
+/** Convert Vertex AI session events to AI SDK UIMessage format */
+function eventsToMessages(events: Array<{ author: string; content: { parts: Array<{ text: string }> } }>): Array<{ id: string; role: 'user' | 'assistant'; parts: Array<{ type: 'text'; text: string }> }> {
+  return events.map((evt, i) => ({
+    id: `restored-${i}`,
+    role: evt.author === 'user' ? 'user' as const : 'assistant' as const,
+    parts: evt.content.parts.map(p => ({ type: 'text' as const, text: p.text })),
+  }));
+}
+
 export function AssistantWidget() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(
+    () => sessionStorage.getItem(SESSION_STORAGE_KEY),
+  );
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessionList, setSessionList] = useState<Array<{ id: string; createTime: string; preview: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Dynamic transport with session ID in body
+  // Persist sessionId to sessionStorage whenever it changes
+  useEffect(() => {
+    if (sessionId) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    } else {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  }, [sessionId]);
+
+  // Custom fetch wrapper to capture X-Session-Id from responses
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+
+  const wrappedFetch = useCallback(async (url: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const response = await fetch(url, init);
+    const newSessionId = response.headers.get('X-Session-Id');
+    if (newSessionId && newSessionId !== sessionIdRef.current) {
+      setSessionId(newSessionId);
+    }
+    return response;
+  }, []);
+
+  // Dynamic transport with session ID in body + custom fetch
   const transportRef = useRef(
     new DefaultChatTransport({
       api: '/api/chat',
+      fetch: wrappedFetch,
       body: () => ({
         ...(sessionId ? { sessionId } : {}),
         userId: 'demo-user',
@@ -117,13 +157,14 @@ export function AssistantWidget() {
     }),
   );
 
-  // Update transport body when sessionId changes
+  // Update transport when sessionId or wrappedFetch changes
   useEffect(() => {
     transportRef.current = new DefaultChatTransport({
       api: '/api/chat',
+      fetch: wrappedFetch,
       body: { ...(sessionId ? { sessionId } : {}), userId: 'demo-user' },
     });
-  }, [sessionId]);
+  }, [sessionId, wrappedFetch]);
 
   const {
     messages,
@@ -136,6 +177,90 @@ export function AssistantWidget() {
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // ── Session resume: restore conversation from Vertex AI on mount ──
+  useEffect(() => {
+    const storedSessionId = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!storedSessionId) return;
+
+    setIsRestoring(true);
+    fetch(`/api/sessions?sessionId=${encodeURIComponent(storedSessionId)}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Session ${storedSessionId} not found`);
+        return res.json();
+      })
+      .then(data => {
+        if (data.events?.length) {
+          setMessages(eventsToMessages(data.events));
+        }
+      })
+      .catch(() => {
+        // Session expired or deleted — start fresh
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        setSessionId(null);
+      })
+      .finally(() => setIsRestoring(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
+
+  // ── Load session list for history drawer ──
+  const loadSessionList = useCallback(async () => {
+    try {
+      const res = await fetch('/api/sessions?userId=demo-user');
+      if (!res.ok) return;
+      const data = await res.json();
+      const sessions = (data.sessions ?? []).map((s: { name: string; createTime: string }) => {
+        const parts = s.name.split('/');
+        return { id: parts[parts.length - 1], createTime: s.createTime, preview: '' };
+      });
+      setSessionList(sessions);
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
+  // Load session history on first drawer open
+  useEffect(() => {
+    if (showHistory) loadSessionList();
+  }, [showHistory, loadSessionList]);
+
+  // Switch to a different session from history
+  const switchToSession = useCallback(async (targetSessionId: string) => {
+    setIsRestoring(true);
+    setShowHistory(false);
+    try {
+      const res = await fetch(`/api/sessions?sessionId=${encodeURIComponent(targetSessionId)}`);
+      if (!res.ok) throw new Error('not found');
+      const data = await res.json();
+      setSessionId(targetSessionId);
+      setMessages(data.events?.length ? eventsToMessages(data.events) : []);
+    } catch {
+      // Session gone — ignore
+    } finally {
+      setIsRestoring(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Delete a session from history
+  const deleteSessionFromHistory = useCallback(async (targetSessionId: string) => {
+    try {
+      await fetch('/api/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: targetSessionId }),
+      });
+      setSessionList(prev => prev.filter(s => s.id !== targetSessionId));
+      // If we deleted the active session, reset
+      if (targetSessionId === sessionId) {
+        setSessionId(null);
+        setMessages([]);
+      }
+    } catch {
+      // silently ignore
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
 
   // Context-aware suggestions based on current route
   const currentSuggestions = ROUTE_SUGGESTIONS[location.pathname] ?? DEFAULT_SUGGESTIONS;
@@ -255,6 +380,7 @@ export function AssistantWidget() {
                 onClick={() => {
                   setMessages([]);
                   setSessionId(null);
+                  setShowHistory(false);
                 }}
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
@@ -262,13 +388,62 @@ export function AssistantWidget() {
                 +
               </button>
             )}
+            <NJIconButton icon="history" variant="inverse" scale="sm" onClick={() => setShowHistory(prev => !prev)} aria-label="Historique" title="Historique des conversations" />
             <NJIconButton icon="close" variant="inverse" scale="sm" onClick={() => setIsOpen(false)} aria-label="Fermer" title="Fermer" />
           </div>
         </div>
 
+        {/* Session History Drawer */}
+        {showHistory && (
+          <div className="genie-history">
+            <div className="genie-history__header">
+              <h3 className="genie-history__title">Conversations récentes</h3>
+              <button className="genie-history__close" onClick={() => setShowHistory(false)} aria-label="Fermer l'historique">✕</button>
+            </div>
+            <div className="genie-history__list">
+              {sessionList.length === 0 ? (
+                <p className="genie-history__empty">Aucune conversation enregistrée</p>
+              ) : (
+                sessionList.map(s => (
+                  <div
+                    key={s.id}
+                    className={`genie-history__item ${s.id === sessionId ? 'genie-history__item--active' : ''}`}
+                  >
+                    <button
+                      className="genie-history__item-btn"
+                      onClick={() => switchToSession(s.id)}
+                    >
+                      <span className="genie-history__item-date">
+                        {new Date(s.createTime).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="genie-history__item-id">Session {s.id.slice(-6)}</span>
+                    </button>
+                    <button
+                      className="genie-history__item-delete"
+                      onClick={() => deleteSessionFromHistory(s.id)}
+                      aria-label="Supprimer"
+                      title="Supprimer cette conversation"
+                    >
+                      {/* @ts-expect-error Fluid DS v6 types */}
+                      <NJIcon name="delete" size="16" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="genie-panel__messages">
-          {messages.length === 0 ? (
+          {isRestoring ? (
+            <div className="genie-panel__welcome">
+              <div className="genie-panel__welcome-icon">
+                <GenieIcon size={48} />
+              </div>
+              <p>Restauration de la conversation…</p>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="genie-panel__welcome">
               <div className="genie-panel__welcome-icon">
                 <GenieIcon size={48} />
