@@ -213,8 +213,9 @@ export function AssistantWidget() {
     transport,
     // Auto-send after tool approval response (HITL flow)
     sendAutomaticallyWhen: ({ messages: msgs }) => {
+      if (!msgs?.length) return false;
       const lastMsg = msgs[msgs.length - 1];
-      if (!lastMsg || lastMsg.role !== 'assistant') return false;
+      if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.parts) return false;
       // Send when all tool parts have been responded to (no pending approvals)
       return lastMsg.parts.some(
         (p) => 'state' in p && p.state === 'approval-responded',
