@@ -2,7 +2,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from '../../services/bff/src/routers/index.js';
 
 export const config = {
-  runtime: 'nodejs22.x',
+  runtime: 'nodejs20.x',
   maxDuration: 10,
 };
 
