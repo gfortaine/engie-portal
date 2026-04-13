@@ -10,6 +10,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
         'common.demo': 'DEMO',
+        'common.notifications': 'Notifications',
         'auth.logout': 'Déconnexion',
       };
       return translations[key] ?? key;

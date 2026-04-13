@@ -39,6 +39,11 @@ export function Header() {
     <FluidHeader
       layout="retracted"
       logo={<EngieLogo />}
+      control={
+        <NJBadge variant="warning" emphasis="subtle">
+          {t('common.demo')}
+        </NJBadge>
+      }
       utility={
         <NJNavigationAction icon="notifications">
           {t('common.notifications')}
@@ -61,10 +66,6 @@ export function Header() {
           onClick={signOut}
         />
       }
-    >
-      <NJBadge variant="warning" emphasis="subtle">
-        {t('common.demo')}
-      </NJBadge>
-    </FluidHeader>
+    />
   );
 }
