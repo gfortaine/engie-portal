@@ -43,14 +43,9 @@ class GenieErrorBoundary extends Component<
 // Safe wrapper for GenUI tool components — guards against undefined/malformed data
 function SafeToolComponent({ Component: Comp, data, toolName }: { Component: React.ComponentType<{ data: unknown }>; data: unknown; toolName: string }) {
   if (data == null) {
-    return <div className="genui-card" style={{ padding: 16, color: '#666' }}>Résultat de {toolName} en cours de chargement…</div>;
+    return <ToolSkeleton toolName={toolName} />;
   }
-  try {
-    return <Comp data={data} />;
-  } catch (err) {
-    console.error(`[Génie] GenUI component ${toolName} crashed:`, err);
-    return <div className="genui-card" style={{ padding: 16, color: '#c00' }}>Erreur d&apos;affichage pour {toolName}</div>;
-  }
+  return <Comp data={data} />;
 }
 import {
   BillBreakdownCard,
@@ -718,8 +713,17 @@ function AssistantWidgetInner() {
                         );
                       }
 
-                      if (toolPart.state === 'output-available' && Component) {
-                        return <SafeToolComponent key={toolPart.toolCallId} Component={Component} data={toolPart.output} toolName={toolName} />;
+                      if (toolPart.state === 'output-available') {
+                        if (Component) {
+                          return <SafeToolComponent key={toolPart.toolCallId} Component={Component} data={toolPart.output} toolName={toolName} />;
+                        }
+                        // Tool without a GenUI component — skip (text response will follow)
+                        return null;
+                      }
+
+                      // Any other state (e.g. output-error, pending) — show skeleton
+                      if (Component || toolPart.state !== 'approval-responded') {
+                        return <ToolSkeleton key={toolPart.toolCallId} toolName={toolName} />;
                       }
                     }
 
