@@ -1,0 +1,63 @@
+/**
+ * /api/sessions — Vertex AI Session management endpoint
+ *
+ * POST   — Create new session { userId }
+ * GET    — List sessions (query: ?userId=xxx) or get session history (?sessionId=xxx)
+ * DELETE — Delete session { sessionId }
+ */
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import {
+  createSession,
+  getSession,
+  getSessionEvents,
+  listSessions,
+  deleteSession,
+} from '../lib/vertex-sessions.js';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    if (req.method === 'POST') {
+      const { userId, sessionId } = req.body as { userId: string; sessionId?: string };
+      if (!userId) return res.status(400).json({ error: 'userId required' });
+
+      const session = await createSession(userId, sessionId);
+      // Extract session ID from resource name
+      const parts = session.name.split('/');
+      const id = parts[parts.length - 1];
+      return res.json({ sessionId: id, ...session });
+    }
+
+    if (req.method === 'GET') {
+      const { sessionId, userId } = req.query as { sessionId?: string; userId?: string };
+
+      if (sessionId) {
+        // Get session + events (conversation history)
+        const [session, events] = await Promise.all([
+          getSession(sessionId),
+          getSessionEvents(sessionId),
+        ]);
+        if (!session) return res.status(404).json({ error: 'Session not found' });
+        return res.json({ session, events });
+      }
+
+      // List sessions for user
+      const sessions = await listSessions(userId);
+      return res.json({ sessions });
+    }
+
+    if (req.method === 'DELETE') {
+      const { sessionId } = req.body as { sessionId: string };
+      if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+      await deleteSession(sessionId);
+      return res.json({ deleted: true });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch (error) {
+    console.error('[api/sessions] Error:', error);
+    return res.status(500).json({
+      error: 'Session operation failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}

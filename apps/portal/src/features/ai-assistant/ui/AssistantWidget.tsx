@@ -65,8 +65,6 @@ const DEFAULT_SUGGESTIONS: SuggestionItem[] = [
   { icon: '💡', text: 'Comment économiser ?' },
 ];
 
-const chatTransport = new DefaultChatTransport({ api: '/api/chat' });
-
 // Génie branded SVG icon
 function GenieIcon({ size = 24, className = '' }: { size?: number; className?: string }) {
   return (
@@ -104,16 +102,37 @@ export function AssistantWidget() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Dynamic transport with session ID in body
+  const transportRef = useRef(
+    new DefaultChatTransport({
+      api: '/api/chat',
+      body: () => ({
+        ...(sessionId ? { sessionId } : {}),
+        userId: 'demo-user',
+      }),
+    }),
+  );
+
+  // Update transport body when sessionId changes
+  useEffect(() => {
+    transportRef.current = new DefaultChatTransport({
+      api: '/api/chat',
+      body: { ...(sessionId ? { sessionId } : {}), userId: 'demo-user' },
+    });
+  }, [sessionId]);
 
   const {
     messages,
     sendMessage,
     addToolApprovalResponse,
     status,
+    setMessages,
   } = useChat({
-    transport: chatTransport,
+    transport: transportRef.current,
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
@@ -233,7 +252,10 @@ export function AssistantWidget() {
             {messages.length > 0 && (
               <button
                 className="genie-new-chat"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setMessages([]);
+                  setSessionId(null);
+                }}
                 title="Nouvelle conversation"
                 aria-label="Nouvelle conversation"
               >

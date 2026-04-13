@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { streamText, tool, convertToModelMessages } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
+import { appendEvent, createSession, getSession } from '../lib/vertex-sessions.js';
 
 // ── Mock data (mirrors tRPC handler data) ──────────────────────────
 const mockContracts = [
@@ -204,7 +205,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { messages } = req.body;
+    const { messages, sessionId: clientSessionId, userId } = req.body;
+
+    // ── Session management ──────────────────────────────────────────
+    let sessionId = clientSessionId as string | undefined;
+    const currentUserId = (userId as string) || 'demo-user';
+
+    // Create session on-the-fly if not provided
+    if (!sessionId) {
+      try {
+        const session = await createSession(currentUserId);
+        const parts = session.name.split('/');
+        sessionId = parts[parts.length - 1];
+      } catch (e) {
+        console.warn('[chat] Session creation failed, continuing without persistence:', e);
+      }
+    }
+
+    // Persist user message to Vertex AI session
+    const lastUserMsg = messages[messages.length - 1];
+    const userText = lastUserMsg?.parts
+      ?.filter((p: { type: string }) => p.type === 'text')
+      ?.map((p: { text: string }) => p.text)
+      ?.join('\n') ?? '';
+    const invocationId = `inv-${Date.now()}`;
+
+    if (sessionId && userText) {
+      appendEvent(sessionId, 'user', userText, invocationId).catch((e) =>
+        console.warn('[chat] Failed to persist user event:', e),
+      );
+    }
 
     // Convert v6 UIMessages (parts array) to CoreMessages (content string) for streamText
     const modelMessages = await convertToModelMessages(messages);
@@ -218,7 +248,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       onError: (error) => {
         console.error('streamText error:', error);
       },
+      onFinish: async ({ text }) => {
+        // Persist assistant response to Vertex AI session
+        if (sessionId && text) {
+          appendEvent(sessionId, 'agent', text, invocationId).catch((e) =>
+            console.warn('[chat] Failed to persist assistant event:', e),
+          );
+        }
+      },
     });
+
+    // Include sessionId in response headers for client to track
+    if (sessionId) {
+      res.setHeader('X-Session-Id', sessionId);
+    }
 
     // Pipe the UI message stream to the Node.js response
     result.pipeUIMessageStreamToResponse(res);
