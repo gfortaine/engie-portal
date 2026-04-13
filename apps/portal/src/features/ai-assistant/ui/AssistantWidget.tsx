@@ -340,44 +340,45 @@ function AssistantWidgetInner() {
       if (!res.ok) return;
       const data = await res.json();
       const titleCache = getTitleCache();
-      const sessions = await Promise.all(
-        (data.sessions ?? []).map(async (s: { name: string; createTime: string }) => {
-          const parts = s.name.split('/');
-          const id = parts[parts.length - 1] ?? s.name;
-
-          // 1. Check title cache first
-          if (titleCache[id]) {
-            return { id, createTime: s.createTime, preview: titleCache[id] };
-          }
-
-          // 2. Fetch first user event for preview
-          let preview = '';
-          try {
-            const evtRes = await fetch(`/api/sessions?sessionId=${encodeURIComponent(id)}`);
-            if (evtRes.ok) {
-              const evtData = await evtRes.json();
-              const firstUserEvent = evtData.events?.find(
-                (e: { author: string }) => e.author === 'user',
-              );
-              if (firstUserEvent) {
-                const text = firstUserEvent.content?.parts?.[0]?.text ?? '';
-                // Generate AI title in background
-                fetch('/api/sessions', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userMessage: text }),
-                })
-                  .then(r => r.json())
-                  .then(d => { if (d.title) setTitleCache(id, d.title); })
-                  .catch(() => {});
-                preview = text.length > 40 ? text.slice(0, 37) + '…' : text;
-              }
-            }
-          } catch { /* ignore */ }
-          return { id, createTime: s.createTime, preview };
-        }),
-      );
+      // Limit to most recent 10 sessions to avoid excessive API calls
+      const recentSessions = (data.sessions ?? []).slice(0, 10);
+      const sessions = recentSessions.map((s: { name: string; createTime: string }) => {
+        const parts = s.name.split('/');
+        const id = parts[parts.length - 1] ?? s.name;
+        const preview = titleCache[id] || '';
+        return { id, createTime: s.createTime, preview };
+      });
       setSessionList(sessions);
+
+      // Background: fetch previews for sessions without titles (max 5 at a time)
+      const needPreview = sessions.filter((s: { preview: string }) => !s.preview).slice(0, 5);
+      for (const s of needPreview) {
+        try {
+          const evtRes = await fetch(`/api/sessions?sessionId=${encodeURIComponent(s.id)}`);
+          if (evtRes.ok) {
+            const evtData = await evtRes.json();
+            const firstUserEvent = evtData.events?.find(
+              (e: { author: string }) => e.author === 'user',
+            );
+            if (firstUserEvent) {
+              const text = firstUserEvent.content?.parts?.[0]?.text ?? '';
+              const truncated = text.length > 40 ? text.slice(0, 37) + '…' : text;
+              s.preview = truncated;
+              // Generate AI title in background
+              fetch('/api/sessions', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userMessage: text }),
+              })
+                .then(r => r.json())
+                .then(d => { if (d.title) { setTitleCache(s.id, d.title); s.preview = d.title; } })
+                .catch(() => {});
+            }
+          }
+        } catch { /* ignore individual failures */ }
+      }
+      // Re-render with previews
+      setSessionList([...sessions]);
     } catch {
       // silently ignore
     }
@@ -649,6 +650,10 @@ function AssistantWidgetInner() {
 
                 <div className="genie-message__content">
                   {message.parts?.map((part, index) => {
+                    // Debug: log each part for diagnosis
+                    if (message.role === 'assistant' && process.env.NODE_ENV === 'development') {
+                      console.debug('[Génie] part', index, part.type, 'state' in part ? (part as { state: string }).state : '-', 'output' in part ? typeof (part as { output: unknown }).output : '-');
+                    }
                     if (part.type === 'text' && 'text' in part) {
                       const text = part.text as string;
                       if (!text.trim()) return null;
