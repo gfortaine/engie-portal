@@ -4,7 +4,47 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { appendEvent, createSession, getSession } from '../lib/vertex-sessions.js';
 
-// ── Mock data (mirrors tRPC handler data) ──────────────────────────
+// ── Dynamic mock data generators ────────────────────────────────────
+// Data is date-relative and uses seeded randomness so it feels fresh
+// but stays consistent within the same day.
+
+/** Simple seeded pseudo-random based on day of year */
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function getDaySeed(): number {
+  const now = new Date();
+  return now.getFullYear() * 1000 + Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000,
+  );
+}
+
+/** Vary a base value by ±range% using seeded random */
+function vary(base: number, rangePct: number, rand: () => number): number {
+  const factor = 1 + (rand() * 2 - 1) * (rangePct / 100);
+  return Math.round(base * factor * 100) / 100;
+}
+
+/** Get French month name */
+function frMonth(m: number): string {
+  return ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][m];
+}
+
+/** Seasonal multiplier for energy consumption (0=Jan..11=Dec) */
+function seasonalFactor(month: number, energyType: string): number {
+  // Heating-dominant: peaks in winter
+  const heatingCurve = [1.35, 1.25, 1.05, 0.80, 0.60, 0.50, 0.45, 0.50, 0.65, 0.85, 1.10, 1.30];
+  // Electricity: winter heating + summer AC
+  const elecCurve =    [1.25, 1.15, 0.95, 0.80, 0.75, 0.85, 0.95, 0.90, 0.75, 0.80, 1.00, 1.20];
+  if (energyType === 'gas') return heatingCurve[month];
+  return elecCurve[month];
+}
+
 const mockContracts = [
   { id: 'ctr_001', reference: 'ENGIE-ELEC-2024-78542', type: 'electricity', status: 'active', address: '15 Rue de la Paix, 75002 Paris', startDate: '2024-01-15', monthlyAmount: 87.50, meterNumber: 'PDL-14789632541' },
   { id: 'ctr_002', reference: 'ENGIE-GAZ-2024-32187', type: 'gas', status: 'active', address: '15 Rue de la Paix, 75002 Paris', startDate: '2024-01-15', monthlyAmount: 62.00, meterNumber: 'PCE-98765432100' },
@@ -12,40 +52,161 @@ const mockContracts = [
   { id: 'ctr_004', reference: 'ENGIE-ELEC-2023-45678', type: 'electricity', status: 'terminated', address: '8 Boulevard Haussmann, 75009 Paris', startDate: '2023-03-01', endDate: '2025-02-28', monthlyAmount: 0, meterNumber: 'PDL-33345678901' },
 ];
 
-const mockInvoices = [
-  { id: 'inv_001', contractId: 'ctr_001', reference: 'FACT-2026-03-001', period: 'Mars 2026', issueDate: '2026-04-01', dueDate: '2026-04-15', amount: 94.32, status: 'pending', breakdown: { consumption: 72.40, subscription: 12.50, taxes: 9.42 } },
-  { id: 'inv_002', contractId: 'ctr_001', reference: 'FACT-2026-02-001', period: 'Février 2026', issueDate: '2026-03-01', dueDate: '2026-03-15', amount: 102.87, status: 'paid', breakdown: { consumption: 80.10, subscription: 12.50, taxes: 10.27 } },
-  { id: 'inv_003', contractId: 'ctr_002', reference: 'FACT-2026-03-002', period: 'Mars 2026', issueDate: '2026-04-01', dueDate: '2026-04-15', amount: 67.50, status: 'pending', breakdown: { consumption: 48.00, subscription: 11.00, taxes: 8.50 } },
-  { id: 'inv_004', contractId: 'ctr_002', reference: 'FACT-2026-02-002', period: 'Février 2026', issueDate: '2026-03-01', dueDate: '2026-03-15', amount: 71.20, status: 'paid', breakdown: { consumption: 52.30, subscription: 11.00, taxes: 7.90 } },
-  { id: 'inv_005', contractId: 'ctr_001', reference: 'FACT-2026-01-001', period: 'Janvier 2026', issueDate: '2026-02-01', dueDate: '2026-02-15', amount: 118.45, status: 'paid', breakdown: { consumption: 95.20, subscription: 12.50, taxes: 10.75 } },
-  { id: 'inv_006', contractId: 'ctr_001', reference: 'FACT-2025-12-001', period: 'Décembre 2025', issueDate: '2026-01-01', dueDate: '2026-01-15', amount: 132.10, status: 'overdue', breakdown: { consumption: 108.50, subscription: 12.50, taxes: 11.10 } },
-];
+function generateInvoices() {
+  const now = new Date();
+  const rand = seededRandom(getDaySeed() + 42);
+  const months: Array<{ year: number; month: number }> = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
 
-const mockAlerts = [
-  { id: 'alert_001', type: 'overconsumption', severity: 'warning', contractRef: 'ENGIE-ELEC-2024-78542', message: 'Consommation électrique supérieure de 23% par rapport au mois dernier', date: '2026-04-10' },
-  { id: 'alert_002', type: 'payment_due', severity: 'danger', contractRef: 'ENGIE-ELEC-2024-78542', message: 'Facture FACT-2025-12-001 en retard de paiement (132,10€)', date: '2026-04-01' },
-  { id: 'alert_003', type: 'rate_change', severity: 'info', contractRef: 'ENGIE-GAZ-2024-32187', message: 'Nouveau tarif réglementé gaz applicable à partir du 1er mai 2026', date: '2026-04-05' },
-  { id: 'alert_004', type: 'eco_tip', severity: 'success', contractRef: 'ENGIE-SOLAR-2025-10245', message: 'Votre installation solaire a produit 15% de plus que prévu ce mois-ci', date: '2026-04-12' },
-];
+  const invoices: Array<{
+    id: string; contractId: string; reference: string; period: string;
+    issueDate: string; dueDate: string; amount: number; status: string;
+    breakdown: { consumption: number; subscription: number; taxes: number };
+  }> = [];
+
+  const contracts = [
+    { id: 'ctr_001', baseConso: 75, subscription: 12.50, taxRate: 0.12 },
+    { id: 'ctr_002', baseConso: 50, subscription: 11.00, taxRate: 0.13 },
+  ];
+
+  for (const [ci, ctr] of contracts.entries()) {
+    for (const [mi, m] of months.entries()) {
+      const season = seasonalFactor(m.month, ci === 0 ? 'electricity' : 'gas');
+      const consumption = vary(ctr.baseConso * season, 12, rand);
+      const taxes = Math.round(consumption * ctr.taxRate * 100) / 100;
+      const amount = Math.round((consumption + ctr.subscription + taxes) * 100) / 100;
+      const issueDate = new Date(m.year, m.month + 1, 1);
+      const dueDate = new Date(m.year, m.month + 1, 15);
+
+      let status = 'paid';
+      if (mi === 0) status = 'pending';
+      else if (mi === 4 && rand() > 0.5) status = 'overdue';
+
+      invoices.push({
+        id: `inv_${String(ci * 100 + mi + 1).padStart(3, '0')}`,
+        contractId: ctr.id,
+        reference: `FACT-${m.year}-${String(m.month + 1).padStart(2, '0')}-${String(ci + 1).padStart(3, '0')}`,
+        period: `${frMonth(m.month)} ${m.year}`,
+        issueDate: issueDate.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+        amount,
+        status,
+        breakdown: { consumption, subscription: ctr.subscription, taxes },
+      });
+    }
+  }
+  return invoices;
+}
+
+function generateAlerts() {
+  const now = new Date();
+  const rand = seededRandom(getDaySeed() + 99);
+  const invoices = generateInvoices();
+
+  // Pool of possible alerts — pick a dynamic subset
+  const alertPool = [
+    { type: 'overconsumption', severity: 'warning', contractRef: 'ENGIE-ELEC-2024-78542', template: `Consommation électrique supérieure de ${Math.round(15 + rand() * 20)}% par rapport au mois dernier`, daysAgo: Math.floor(rand() * 5) },
+    { type: 'payment_due', severity: 'danger', contractRef: 'ENGIE-ELEC-2024-78542', template: '', daysAgo: Math.floor(rand() * 10 + 2) },
+    { type: 'rate_change', severity: 'info', contractRef: 'ENGIE-GAZ-2024-32187', template: 'Nouveau tarif réglementé gaz applicable à partir du 1er du mois prochain', daysAgo: Math.floor(rand() * 8) },
+    { type: 'eco_tip', severity: 'success', contractRef: 'ENGIE-SOLAR-2025-10245', template: `Votre installation solaire a produit ${Math.round(10 + rand() * 25)}% de plus que prévu ce mois-ci`, daysAgo: Math.floor(rand() * 3) },
+    { type: 'meter_reading', severity: 'info', contractRef: 'ENGIE-ELEC-2024-78542', template: 'Relevé de compteur prévu dans les 5 prochains jours', daysAgo: 0 },
+    { type: 'contract_renewal', severity: 'warning', contractRef: 'ENGIE-GAZ-2024-32187', template: 'Votre contrat gaz arrive à échéance dans 45 jours', daysAgo: Math.floor(rand() * 7 + 1) },
+    { type: 'consumption_goal', severity: 'success', contractRef: 'ENGIE-ELEC-2024-78542', template: `Objectif consommation atteint : -${Math.round(5 + rand() * 12)}% ce mois-ci 🎉`, daysAgo: Math.floor(rand() * 2) },
+    { type: 'peak_warning', severity: 'warning', contractRef: 'ENGIE-ELEC-2024-78542', template: 'Pic de consommation détecté hier entre 18h et 21h', daysAgo: 1 },
+    { type: 'payment_confirmed', severity: 'success', contractRef: 'ENGIE-GAZ-2024-32187', template: 'Paiement de votre facture gaz confirmé', daysAgo: Math.floor(rand() * 6 + 1) },
+    { type: 'eco_bonus', severity: 'info', contractRef: 'ENGIE-SOLAR-2025-10245', template: 'Prime énergie : vous êtes éligible à une aide pour l\'isolation thermique', daysAgo: Math.floor(rand() * 4) },
+  ];
+
+  // Fill in payment_due with dynamic invoice reference
+  const overdueInv = invoices.find(i => i.status === 'overdue');
+  if (overdueInv) {
+    const pdAlert = alertPool.find(a => a.type === 'payment_due');
+    if (pdAlert) pdAlert.template = `Facture ${overdueInv.reference} en retard de paiement (${overdueInv.amount.toFixed(2).replace('.', ',')}€)`;
+  } else {
+    // No overdue invoice → remove payment_due alert
+    const idx = alertPool.findIndex(a => a.type === 'payment_due');
+    if (idx >= 0) alertPool.splice(idx, 1);
+  }
+
+  // Pick 3-5 alerts based on day seed
+  const count = 3 + Math.floor(rand() * 3);
+  // Shuffle using Fisher-Yates
+  for (let i = alertPool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [alertPool[i], alertPool[j]] = [alertPool[j], alertPool[i]];
+  }
+  const selected = alertPool.slice(0, count);
+
+  return selected.map((a, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - a.daysAgo);
+    return {
+      id: `alert_${String(i + 1).padStart(3, '0')}`,
+      type: a.type,
+      severity: a.severity,
+      contractRef: a.contractRef,
+      message: a.template,
+      date: date.toISOString().split('T')[0],
+    };
+  });
+}
 
 function generateConsumptionStats(contractId: string) {
+  const now = new Date();
+  const rand = seededRandom(getDaySeed() + 77);
   const contract = mockContracts.find(c => c.id === contractId);
   const isElectric = contract?.type === 'electricity' || contract?.type === 'solar';
+  const energyType = contract?.type ?? 'electricity';
   const unit = isElectric ? 'kWh' : 'm³';
+  const baseMonthly = isElectric ? 320 : 120;
+
+  const curMonth = now.getMonth();
+  const prevMonth = (curMonth - 1 + 12) % 12;
+
+  const curSeason = seasonalFactor(curMonth, energyType);
+  const prevSeason = seasonalFactor(prevMonth, energyType);
+
+  const curTotal = Math.round(vary(baseMonthly * curSeason, 10, rand));
+  const prevTotal = Math.round(vary(baseMonthly * prevSeason, 10, rand));
+  const curDays = now.getDate();
+  const prevDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+
+  // Year-over-year with slight trend
+  const ytdMonths = curMonth + 1;
+  let curYear = 0, prevYear = 0;
+  for (let i = 0; i < ytdMonths; i++) {
+    const sf = seasonalFactor(i, energyType);
+    curYear += Math.round(vary(baseMonthly * sf, 8, rand));
+    prevYear += Math.round(vary(baseMonthly * sf * 1.04, 8, rand)); // last year was ~4% higher
+  }
+  const changePercent = Math.round(((curYear - prevYear) / prevYear) * 1000) / 10;
+
+  // Monthly chart data — last 6 months
+  const monthlyData: Array<{ month: string; value: number }> = [];
+  for (let i = 5; i >= 0; i--) {
+    const m = (curMonth - i + 12) % 12;
+    const sf = seasonalFactor(m, energyType);
+    monthlyData.push({
+      month: frMonth(m).slice(0, 3),
+      value: Math.round(vary(baseMonthly * sf, 10, rand)),
+    });
+  }
+
+  const trend = curTotal < prevTotal ? 'decreasing' : curTotal > prevTotal * 1.05 ? 'increasing' : 'stable';
+
   return {
     contractRef: contract?.reference ?? contractId,
-    type: contract?.type ?? 'unknown',
+    type: energyType,
     unit,
-    currentMonth: { period: 'Mars 2026', total: isElectric ? 342 : 128, dailyAvg: isElectric ? 11.0 : 4.1 },
-    previousMonth: { period: 'Février 2026', total: isElectric ? 385 : 145, dailyAvg: isElectric ? 13.7 : 5.2 },
-    yearOverYear: { currentYear: isElectric ? 1050 : 420, previousYear: isElectric ? 980 : 395, changePercent: isElectric ? 7.1 : 6.3 },
-    trend: isElectric ? 'decreasing' : 'stable' as const,
-    peakHours: isElectric ? { percentage: 35, recommendation: 'Décaler les cycles de lave-linge en heures creuses' } : null,
-    monthlyData: [
-      { month: 'Jan', value: isElectric ? 420 : 165 },
-      { month: 'Fév', value: isElectric ? 385 : 145 },
-      { month: 'Mar', value: isElectric ? 342 : 128 },
-    ],
+    currentMonth: { period: `${frMonth(curMonth)} ${now.getFullYear()}`, total: curTotal, dailyAvg: Math.round((curTotal / curDays) * 10) / 10 },
+    previousMonth: { period: `${frMonth(prevMonth)} ${now.getFullYear()}`, total: prevTotal, dailyAvg: Math.round((prevTotal / prevDays) * 10) / 10 },
+    yearOverYear: { currentYear: curYear, previousYear: prevYear, changePercent },
+    trend: trend as 'decreasing' | 'increasing' | 'stable',
+    peakHours: isElectric ? { percentage: Math.round(30 + rand() * 15), recommendation: 'Décaler les cycles de lave-linge en heures creuses' } : null,
+    monthlyData,
   };
 }
 
@@ -81,9 +242,10 @@ const tools = {
       invoiceRef: z.string().describe("Référence de la facture (ex: FACT-2026-03-001) ou 'latest' pour la dernière"),
     }),
     execute: async ({ invoiceRef }) => {
+      const invoices = generateInvoices();
       const invoice = invoiceRef === 'latest'
-        ? mockInvoices[0]
-        : mockInvoices.find(i => i.reference === invoiceRef) ?? mockInvoices[0];
+        ? invoices[0]
+        : invoices.find(i => i.reference === invoiceRef) ?? invoices[0];
       const contract = mockContracts.find(c => c.id === invoice!.contractId);
       return {
         ...invoice,
@@ -112,13 +274,14 @@ const tools = {
       contractIds: z.array(z.string()).min(2).describe("Liste des IDs de contrats à comparer"),
     }),
     execute: async ({ contractIds }) => {
+      const invoices = generateInvoices();
       return contractIds
         .map(id => {
           const contract = mockContracts.find(c => c.id === id);
           if (!contract) return null;
-          const invoices = mockInvoices.filter(i => i.contractId === id);
-          const totalSpent = invoices.reduce((sum, i) => sum + i.amount, 0);
-          return { ...contract, invoiceCount: invoices.length, totalSpent: Math.round(totalSpent * 100) / 100 };
+          const ctInvoices = invoices.filter(i => i.contractId === id);
+          const totalSpent = ctInvoices.reduce((sum, i) => sum + i.amount, 0);
+          return { ...contract, invoiceCount: ctInvoices.length, totalSpent: Math.round(totalSpent * 100) / 100 };
         })
         .filter(Boolean);
     },
@@ -146,10 +309,11 @@ const tools = {
       severity: z.enum(['all', 'danger', 'warning', 'info', 'success']).optional().describe("Filtrer par niveau de sévérité"),
     }),
     execute: async ({ severity }) => {
+      const alerts = generateAlerts();
       if (severity && severity !== 'all') {
-        return mockAlerts.filter(a => a.severity === severity);
+        return alerts.filter(a => a.severity === severity);
       }
-      return mockAlerts;
+      return alerts;
     },
   }),
 
@@ -160,17 +324,27 @@ const tools = {
       contractId: z.string().optional().describe("ID du contrat pour des recommandations ciblées"),
     }),
     execute: async ({ contractId }) => {
+      const rand = seededRandom(getDaySeed() + 55);
       const contract = mockContracts.find(c => c.id === (contractId ?? 'ctr_001'));
-      const savings = [
-        { id: 'sav_001', title: 'Heures creuses', description: 'Programmez vos appareils énergivores (lave-linge, lave-vaisselle) entre 22h et 6h', potentialSaving: '15%', impactEuros: 14.20, difficulty: 'easy', category: 'comportement' },
-        { id: 'sav_002', title: 'Thermostat intelligent', description: 'Installez un thermostat connecté pour optimiser le chauffage selon votre présence', potentialSaving: '20%', impactEuros: 18.60, difficulty: 'medium', category: 'équipement' },
-        { id: 'sav_003', title: 'Veille des appareils', description: 'Utilisez des multiprises à interrupteur pour couper la veille des appareils électroniques', potentialSaving: '10%', impactEuros: 9.30, difficulty: 'easy', category: 'comportement' },
-        { id: 'sav_004', title: 'Isolation fenêtres', description: 'Vérifiez les joints de vos fenêtres — des joints usés peuvent augmenter votre facture de chauffage de 25%', potentialSaving: '25%', impactEuros: 23.25, difficulty: 'hard', category: 'travaux' },
+      const allSavings = [
+        { id: 'sav_001', title: 'Heures creuses', description: 'Programmez vos appareils énergivores (lave-linge, lave-vaisselle) entre 22h et 6h', potentialSaving: '15%', impactEuros: vary(14.20, 15, rand), difficulty: 'easy', category: 'comportement' },
+        { id: 'sav_002', title: 'Thermostat intelligent', description: 'Installez un thermostat connecté pour optimiser le chauffage selon votre présence', potentialSaving: '20%', impactEuros: vary(18.60, 15, rand), difficulty: 'medium', category: 'équipement' },
+        { id: 'sav_003', title: 'Veille des appareils', description: 'Utilisez des multiprises à interrupteur pour couper la veille des appareils électroniques', potentialSaving: '10%', impactEuros: vary(9.30, 15, rand), difficulty: 'easy', category: 'comportement' },
+        { id: 'sav_004', title: 'Isolation fenêtres', description: 'Vérifiez les joints de vos fenêtres — des joints usés peuvent augmenter votre facture de chauffage de 25%', potentialSaving: '25%', impactEuros: vary(23.25, 15, rand), difficulty: 'hard', category: 'travaux' },
+        { id: 'sav_005', title: 'Éclairage LED', description: 'Remplacez vos ampoules classiques par des LED — jusqu\'à 80% d\'économie sur l\'éclairage', potentialSaving: '8%', impactEuros: vary(7.50, 15, rand), difficulty: 'easy', category: 'équipement' },
+        { id: 'sav_006', title: 'Douche économique', description: 'Installez un pommeau de douche économique pour réduire la consommation d\'eau chaude', potentialSaving: '12%', impactEuros: vary(11.00, 15, rand), difficulty: 'easy', category: 'équipement' },
       ];
+      // Pick 3-5 savings
+      const count = 3 + Math.floor(rand() * 3);
+      for (let i = allSavings.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [allSavings[i], allSavings[j]] = [allSavings[j], allSavings[i]];
+      }
+      const savings = allSavings.slice(0, count);
       return {
         contractRef: contract?.reference,
         energyType: contract?.type,
-        totalPotentialSaving: savings.reduce((sum, s) => sum + s.impactEuros, 0),
+        totalPotentialSaving: Math.round(savings.reduce((sum, s) => sum + s.impactEuros, 0) * 100) / 100,
         recommendations: savings,
       };
     },
