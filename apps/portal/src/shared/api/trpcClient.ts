@@ -4,7 +4,8 @@ import superjson from 'superjson';
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
-    return '';
+    // In production, BFF is a separate Vercel project
+    return import.meta.env.VITE_BFF_URL ?? '';
   }
   return 'http://localhost:4000';
 };

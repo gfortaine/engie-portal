@@ -2,7 +2,6 @@
   "name": "@engie-portal/bff",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "exports": {
     "./routers": "./src/routers/index.ts"
   },
@@ -14,12 +13,13 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@trpc/server": "catalog:default",
-    "zod": "catalog:default",
+    "@trpc/server": "^11.1.0",
+    "zod": "^3.25.0",
     "superjson": "^2.2.0"
   },
   "devDependencies": {
-    "typescript": "catalog:default",
+    "@vercel/node": "^5.0.0",
+    "typescript": "^5.8.3",
     "tsx": "^4.19.0",
     "@types/node": "^22.15.0",
     "@types/cors": "^2.8.0"
