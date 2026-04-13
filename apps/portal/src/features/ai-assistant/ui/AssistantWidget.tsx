@@ -4,8 +4,6 @@ import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from '@tanstack/react-router';
 import {
-  NJButton,
-  NJIcon,
   NJBadge,
 } from '@engie-group/fluid-design-system-react';
 import {
@@ -262,16 +260,14 @@ export function AssistantWidget() {
                 +
               </button>
             )}
-            <NJButton
-              // @ts-expect-error Fluid DS v6 types
-              variant="subtle"
-              size="sm"
+            <button
+              className="genie-close-btn"
               onClick={() => setIsOpen(false)}
               aria-label="Fermer"
+              title="Fermer"
             >
-              {/* @ts-expect-error Fluid DS v6 types */}
-              <NJIcon name="close" size="20" />
-            </NJButton>
+              ✕
+            </button>
           </div>
         </div>
 
@@ -296,8 +292,7 @@ export function AssistantWidget() {
                   >
                     <span className="genie-suggestion__icon">{prompt.icon}</span>
                     <span className="genie-suggestion__text">{prompt.text}</span>
-                    {/* @ts-expect-error Fluid DS v6 types */}
-                    <NJIcon name="arrow_forward" size="16" className="genie-suggestion__arrow" />
+                    <span className="genie-suggestion__arrow">→</span>
                   </button>
                 ))}
               </div>
@@ -331,12 +326,21 @@ export function AssistantWidget() {
                       );
                     }
 
-                    if (part.type.startsWith('tool-')) {
-                      const toolPart = part as { type: string; toolCallId: string; toolName: string; state: string; args?: unknown; result?: unknown };
-                      const Component = toolComponentMap[toolPart.toolName];
+                    if (part.type.startsWith('tool-') || part.type === 'dynamic-tool') {
+                      const toolPart = part as {
+                        type: string;
+                        toolCallId: string;
+                        toolName?: string;
+                        state: string;
+                        input?: unknown;
+                        output?: unknown;
+                      };
+                      // Extract tool name from type (e.g. "tool-getAlerts" → "getAlerts")
+                      const toolName = toolPart.toolName ?? toolPart.type.replace('tool-', '');
+                      const Component = toolComponentMap[toolName];
 
-                      if (toolPart.state === 'call' || toolPart.state === 'partial-call') {
-                        return <ToolSkeleton key={toolPart.toolCallId} toolName={toolPart.toolName} />;
+                      if (toolPart.state === 'input-streaming' || toolPart.state === 'input-available') {
+                        return <ToolSkeleton key={toolPart.toolCallId} toolName={toolName} />;
                       }
 
                       // Human-in-the-loop: approval requested
@@ -348,10 +352,10 @@ export function AssistantWidget() {
                               <span>Action nécessitant votre approbation</span>
                             </div>
                             <div className="genie-approval__tool">
-                              <strong>{toolPart.toolName === 'suggestSavings' ? 'Optimisation contrat' : toolPart.toolName}</strong>
-                              {toolPart.args != null && (
+                              <strong>{toolName === 'suggestSavings' ? 'Optimisation contrat' : toolName}</strong>
+                              {toolPart.input != null && (
                                 <pre className="genie-approval__args">
-                                  {JSON.stringify(toolPart.args as Record<string, unknown>, null, 2)}
+                                  {JSON.stringify(toolPart.input as Record<string, unknown>, null, 2)}
                                 </pre>
                               )}
                             </div>
@@ -373,8 +377,8 @@ export function AssistantWidget() {
                         );
                       }
 
-                      if (toolPart.state === 'result' && Component) {
-                        return <Component key={toolPart.toolCallId} data={toolPart.result} />;
+                      if (toolPart.state === 'output-available' && Component) {
+                        return <Component key={toolPart.toolCallId} data={toolPart.output} />;
                       }
                     }
 
@@ -423,8 +427,7 @@ export function AssistantWidget() {
               disabled={isLoading || !input.trim()}
               aria-label="Envoyer"
             >
-              {/* @ts-expect-error Fluid DS v6 types */}
-              <NJIcon name="send" size="18" />
+              ➤
             </button>
           </div>
           <p className="genie-panel__disclaimer">
