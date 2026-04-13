@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { streamText } from 'ai';
+import { streamText, tool } from 'ai';
+import { createGoogleGenerativeAI, google } from '@ai-sdk/google';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
@@ -74,12 +75,12 @@ Capacités:
 
 // ── Energy Domain Tools ────────────────────────────────────────────
 const tools = {
-  explainBill: {
+  explainBill: tool({
     description: "Explique en détail une facture d'énergie avec la décomposition des coûts (consommation, abonnement, taxes). Utilise cet outil quand le client pose une question sur une facture.",
-    parameters: z.object({
+    inputSchema: z.object({
       invoiceRef: z.string().describe("Référence de la facture (ex: FACT-2026-03-001) ou 'latest' pour la dernière"),
     }),
-    execute: async ({ invoiceRef }: { invoiceRef: string }) => {
+    execute: async ({ invoiceRef }) => {
       const invoice = invoiceRef === 'latest'
         ? mockInvoices[0]
         : mockInvoices.find(i => i.reference === invoiceRef) ?? mockInvoices[0];
@@ -93,24 +94,24 @@ const tools = {
         pricePerUnit: contract?.type === 'electricity' ? '0.2516 €/kWh' : '0.1284 €/kWh',
       };
     },
-  },
+  }),
 
-  analyzeConsumption: {
+  analyzeConsumption: tool({
     description: "Analyse la consommation d'énergie pour un contrat donné. Montre les tendances, comparaisons et recommandations. Utilise cet outil pour les questions sur la consommation.",
-    parameters: z.object({
+    inputSchema: z.object({
       contractId: z.string().optional().describe("ID du contrat (ctr_001, ctr_002, etc.) — si non fourni, utilise le contrat principal"),
     }),
-    execute: async ({ contractId }: { contractId?: string }) => {
+    execute: async ({ contractId }) => {
       return generateConsumptionStats(contractId ?? 'ctr_001');
     },
-  },
+  }),
 
-  compareContracts: {
+  compareContracts: tool({
     description: "Compare deux ou plusieurs contrats côte à côte — type, tarif, consommation, coût. Utilise cet outil quand le client veut comparer ses contrats.",
-    parameters: z.object({
+    inputSchema: z.object({
       contractIds: z.array(z.string()).min(2).describe("Liste des IDs de contrats à comparer"),
     }),
-    execute: async ({ contractIds }: { contractIds: string[] }) => {
+    execute: async ({ contractIds }) => {
       return contractIds
         .map(id => {
           const contract = mockContracts.find(c => c.id === id);
@@ -121,14 +122,14 @@ const tools = {
         })
         .filter(Boolean);
     },
-  },
+  }),
 
-  findContract: {
+  findContract: tool({
     description: "Recherche un contrat par critères (type d'énergie, adresse, statut, référence). Utilise cet outil quand le client cherche un contrat spécifique.",
-    parameters: z.object({
+    inputSchema: z.object({
       query: z.string().describe("Terme de recherche (type d'énergie, adresse, référence, etc.)"),
     }),
-    execute: async ({ query }: { query: string }) => {
+    execute: async ({ query }) => {
       const q = query.toLowerCase();
       return mockContracts.filter(c =>
         c.type.includes(q) ||
@@ -137,27 +138,27 @@ const tools = {
         c.status.includes(q)
       );
     },
-  },
+  }),
 
-  getAlerts: {
+  getAlerts: tool({
     description: "Récupère les alertes et notifications actives du client (surconsommation, paiements en retard, changements de tarif, conseils écologiques).",
-    parameters: z.object({
+    inputSchema: z.object({
       severity: z.enum(['all', 'danger', 'warning', 'info', 'success']).optional().describe("Filtrer par niveau de sévérité"),
     }),
-    execute: async ({ severity }: { severity?: string }) => {
+    execute: async ({ severity }) => {
       if (severity && severity !== 'all') {
         return mockAlerts.filter(a => a.severity === severity);
       }
       return mockAlerts;
     },
-  },
+  }),
 
-  suggestSavings: {
+  suggestSavings: tool({
     description: "Propose des recommandations d'économies d'énergie personnalisées basées sur les habitudes de consommation du client.",
-    parameters: z.object({
+    inputSchema: z.object({
       contractId: z.string().optional().describe("ID du contrat pour des recommandations ciblées"),
     }),
-    execute: async ({ contractId }: { contractId?: string }) => {
+    execute: async ({ contractId }) => {
       const contract = mockContracts.find(c => c.id === (contractId ?? 'ctr_001'));
       const savings = [
         { id: 'sav_001', title: 'Heures creuses', description: 'Programmez vos appareils énergivores (lave-linge, lave-vaisselle) entre 22h et 6h', potentialSaving: '15%', impactEuros: 14.20, difficulty: 'easy', category: 'comportement' },
@@ -172,8 +173,23 @@ const tools = {
         recommendations: savings,
       };
     },
-  },
+  }),
 };
+
+// ── Model selection ────────────────────────────────────────────────
+function getModel() {
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    return google('gemini-2.0-flash');
+  }
+  if (process.env.GEMINI_API_KEY) {
+    const g = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+    return g('gemini-2.0-flash');
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return openai('gpt-4o-mini');
+  }
+  return null;
+}
 
 // ── Vercel Serverless Handler ──────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -181,14 +197,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check for API key
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    // Demo mode: return a mock streamed response using UI message stream format
+  const model = getModel();
+  if (!model) {
+    // Demo mode: return a mock streamed response
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('X-Vercel-AI-Data-Stream', 'v1');
     return res.status(200).end(
-      '0:"Bienvenue sur l\'assistant ENGIE ! 🌿\\n\\nJe suis en mode démo — pour activer l\'IA complète, configurez la variable d\'environnement `OPENAI_API_KEY`.\\n\\nEn attendant, explorez le portail pour gérer vos contrats, factures et consommation."\n'
+      '0:"Bienvenue sur l\'assistant ENGIE ! 🌿\\n\\nJe suis en mode démo — pour activer l\'IA complète, configurez `GOOGLE_GENERATIVE_AI_API_KEY` ou `OPENAI_API_KEY`.\\n\\nEn attendant, explorez le portail pour gérer vos contrats, factures et consommation."\n'
     );
   }
 
@@ -196,11 +211,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { messages } = req.body;
 
     const result = streamText({
-      model: openai('gpt-4o-mini'),
+      model,
       system: SYSTEM_PROMPT,
       messages,
       tools,
       maxSteps: 3,
+      onError: (error) => {
+        console.error('streamText error:', error);
+      },
     });
 
     // Pipe the UI message stream to the Node.js response

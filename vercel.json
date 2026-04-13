@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
+  "devCommand": "cd apps/portal && npx vite --port $PORT",
   "installCommand": "npm i -g pnpm@10.11.0 && pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @engie-portal/portal build",
   "outputDirectory": "apps/portal/dist",
