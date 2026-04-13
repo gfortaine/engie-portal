@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { streamText, tool } from 'ai';
+import { streamText, tool, convertToModelMessages } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 
@@ -205,10 +205,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { messages } = req.body;
 
+    // Convert v6 UIMessages (parts array) to CoreMessages (content string) for streamText
+    const modelMessages = await convertToModelMessages(messages);
+
     const result = streamText({
       model,
       system: SYSTEM_PROMPT,
-      messages,
+      messages: modelMessages,
       tools,
       maxSteps: 3,
       onError: (error) => {

@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'html',
   timeout: 30_000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.PW_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     locale: 'fr-FR',
