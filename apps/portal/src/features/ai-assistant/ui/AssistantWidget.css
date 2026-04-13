@@ -1,8 +1,8 @@
-/* ── ENGIenie — Conversational AI Sidebar ──────────────────────────── */
+/* ── Génie by ENGIE — Conversational AI Sidebar ───────────────────── */
 /* Enterprise sidebar panel UX — persistent tab toggle + slide-out panel */
 
 /* ── Sidebar Tab Toggle ─────────────────────────────────────────── */
-.engianie-tab {
+.genie-tab {
   position: fixed;
   right: 0;
   top: 50%;
@@ -30,27 +30,27 @@
   writing-mode: horizontal-tb;
 }
 
-.engianie-tab:hover {
+.genie-tab:hover {
   padding-right: 18px;
   box-shadow: -4px 2px 20px rgba(0, 170, 255, 0.35);
 }
 
-.engianie-tab--active {
+.genie-tab--active {
   right: 420px;
   background: var(--nj-core-color-ultramarine-800, #1a237e);
   box-shadow: -2px 2px 12px rgba(26, 35, 126, 0.3);
 }
 
-.engianie-tab__label {
+.genie-tab__label {
   line-height: 1;
 }
 
-.engianie-tab__badge {
+.genie-tab__badge {
   margin-left: 2px;
 }
 
 /* ── Sidebar Panel ─────────────────────────────────────────────── */
-.engianie-panel {
+.genie-panel {
   position: fixed;
   top: 0;
   right: 0;
@@ -68,12 +68,12 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.engianie-panel--open {
+.genie-panel--open {
   transform: translateX(0);
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */
-.engianie-panel__header {
+.genie-panel__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -84,28 +84,28 @@
   flex-shrink: 0;
 }
 
-.engianie-panel__header .nj-btn {
+.genie-panel__header .nj-btn {
   color: white !important;
   opacity: 0.8;
 }
 
-.engianie-panel__header .nj-btn:hover {
+.genie-panel__header .nj-btn:hover {
   opacity: 1;
 }
 
-.engianie-panel__header-brand {
+.genie-panel__header-brand {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.engianie-panel__header-text {
+.genie-panel__header-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.engianie-panel__title {
+.genie-panel__title {
   font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
@@ -113,42 +113,48 @@
   letter-spacing: 0.01em;
 }
 
-.engianie-panel__subtitle {
+.genie-panel__title-brand {
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 0.85em;
+}
+
+.genie-panel__subtitle {
   font-size: 0.7rem;
   opacity: 0.85;
 }
 
 /* Status indicator */
-.engianie-status {
+.genie-status {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
 
-.engianie-status--active {
+.genie-status--active {
   color: #23D2B5;
 }
 
-.engianie-status__dot {
+.genie-status__dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #9ca3af;
-  animation: engianiePulse 2s ease-in-out infinite;
+  animation: geniePulse 2s ease-in-out infinite;
 }
 
-.engianie-status__dot--online {
+.genie-status__dot--online {
   background: #23D2B5;
   animation: none;
 }
 
-@keyframes engianiePulse {
+@keyframes geniePulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
 /* ── Messages Area ──────────────────────────────────────────────── */
-.engianie-panel__messages {
+.genie-panel__messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
@@ -159,21 +165,21 @@
 }
 
 /* Custom scrollbar */
-.engianie-panel__messages::-webkit-scrollbar {
+.genie-panel__messages::-webkit-scrollbar {
   width: 4px;
 }
 
-.engianie-panel__messages::-webkit-scrollbar-track {
+.genie-panel__messages::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.engianie-panel__messages::-webkit-scrollbar-thumb {
+.genie-panel__messages::-webkit-scrollbar-thumb {
   background: var(--nj-color-border-subtle, #d1d5db);
   border-radius: 2px;
 }
 
 /* ── Welcome State ──────────────────────────────────────────────── */
-.engianie-panel__welcome {
+.genie-panel__welcome {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -182,21 +188,21 @@
   gap: 12px;
 }
 
-.engianie-panel__welcome-icon {
+.genie-panel__welcome-icon {
   padding: 12px;
   background: linear-gradient(135deg, rgba(0, 170, 255, 0.08) 0%, rgba(35, 210, 181, 0.08) 100%);
   border-radius: 50%;
   margin-bottom: 4px;
 }
 
-.engianie-panel__welcome h3 {
+.genie-panel__welcome h3 {
   font-size: 1.15rem;
   font-weight: 700;
   margin: 0;
   color: var(--nj-color-text-default);
 }
 
-.engianie-panel__welcome p {
+.genie-panel__welcome p {
   font-size: 0.85rem;
   color: var(--nj-color-text-subtle, #6b7280);
   margin: 0;
@@ -204,14 +210,14 @@
   max-width: 320px;
 }
 
-.engianie-panel__powered {
+.genie-panel__powered {
   font-size: 0.7rem !important;
   color: var(--nj-color-text-subtle, #9ca3af) !important;
   margin-top: 8px !important;
 }
 
 /* ── Suggestion Cards ───────────────────────────────────────────── */
-.engianie-panel__suggestions {
+.genie-panel__suggestions {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -219,7 +225,7 @@
   margin-top: 8px;
 }
 
-.engianie-suggestion {
+.genie-suggestion {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -235,49 +241,49 @@
   transition: all 0.2s ease;
 }
 
-.engianie-suggestion:hover {
+.genie-suggestion:hover {
   background: linear-gradient(135deg, rgba(0, 170, 255, 0.05) 0%, rgba(35, 210, 181, 0.05) 100%);
   border-color: #00AAFF;
   transform: translateX(2px);
 }
 
-.engianie-suggestion__icon {
+.genie-suggestion__icon {
   font-size: 1rem;
   flex-shrink: 0;
 }
 
-.engianie-suggestion__text {
+.genie-suggestion__text {
   flex: 1;
 }
 
-.engianie-suggestion__arrow {
+.genie-suggestion__arrow {
   opacity: 0;
   transition: opacity 0.2s ease;
   color: #00AAFF;
 }
 
-.engianie-suggestion:hover .engianie-suggestion__arrow {
+.genie-suggestion:hover .genie-suggestion__arrow {
   opacity: 1;
 }
 
 /* ── Message Bubbles ────────────────────────────────────────────── */
-.engianie-message {
+.genie-message {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  animation: engianieSlideIn 0.3s ease;
+  animation: genieSlideIn 0.3s ease;
 }
 
-@keyframes engianieSlideIn {
+@keyframes genieSlideIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.engianie-message--user {
+.genie-message--user {
   flex-direction: row-reverse;
 }
 
-.engianie-message__avatar {
+.genie-message__avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -289,45 +295,45 @@
   margin-top: 2px;
 }
 
-.engianie-message--user .engianie-message__content {
+.genie-message--user .genie-message__content {
   background: linear-gradient(135deg, #00295E 0%, #003D8F 100%);
   color: white;
   border-radius: 14px 14px 4px 14px;
 }
 
-.engianie-message--assistant .engianie-message__content {
+.genie-message--assistant .genie-message__content {
   background: var(--nj-core-color-grey-100, #f5f5f5);
   border-radius: 14px 14px 14px 4px;
 }
 
-.engianie-message__content {
+.genie-message__content {
   max-width: 100%;
   overflow: hidden;
 }
 
-.engianie-message__text {
+.genie-message__text {
   padding: 10px 14px;
 }
 
-.engianie-message__text p {
+.genie-message__text p {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.6;
 }
 
-.engianie-message__text p + p {
+.genie-message__text p + p {
   margin-top: 0.4rem;
 }
 
 /* Generative UI inside messages — remove bubble background */
-.engianie-message--assistant .engianie-message__content:has(.genui-card),
-.engianie-message--assistant .engianie-message__content:has(.genui-skeleton),
-.engianie-message--assistant .engianie-message__content:has(.genui-contract-results) {
+.genie-message--assistant .genie-message__content:has(.genui-card),
+.genie-message--assistant .genie-message__content:has(.genui-skeleton),
+.genie-message--assistant .genie-message__content:has(.genui-contract-results) {
   background: transparent;
 }
 
 /* ── Typing Indicator ───────────────────────────────────────────── */
-.engianie-message__typing {
+.genie-message__typing {
   display: flex;
   gap: 4px;
   padding: 12px 16px;
@@ -335,31 +341,31 @@
   border-radius: 14px;
 }
 
-.engianie-message__typing span {
+.genie-message__typing span {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: linear-gradient(135deg, #00AAFF, #23D2B5);
-  animation: engianieTyping 1.4s ease-in-out infinite;
+  animation: genieTyping 1.4s ease-in-out infinite;
 }
 
-.engianie-message__typing span:nth-child(2) { animation-delay: 0.2s; }
-.engianie-message__typing span:nth-child(3) { animation-delay: 0.4s; }
+.genie-message__typing span:nth-child(2) { animation-delay: 0.2s; }
+.genie-message__typing span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes engianieTyping {
+@keyframes genieTyping {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
   30% { transform: translateY(-5px); opacity: 1; }
 }
 
 /* ── Input Area ─────────────────────────────────────────────────── */
-.engianie-panel__input {
+.genie-panel__input {
   padding: 12px 16px 8px;
   border-top: 1px solid var(--nj-color-border-subtle, #e5e7eb);
   background: var(--nj-color-background-default, #fff);
   flex-shrink: 0;
 }
 
-.engianie-panel__input-wrapper {
+.genie-panel__input-wrapper {
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -370,12 +376,12 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.engianie-panel__input-wrapper:focus-within {
+.genie-panel__input-wrapper:focus-within {
   border-color: #00AAFF;
   box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.1);
 }
 
-.engianie-panel__textarea {
+.genie-panel__textarea {
   flex: 1;
   border: none;
   background: transparent;
@@ -389,15 +395,15 @@
   max-height: 120px;
 }
 
-.engianie-panel__textarea::placeholder {
+.genie-panel__textarea::placeholder {
   color: var(--nj-color-text-subtle, #9ca3af);
 }
 
-.engianie-panel__textarea:disabled {
+.genie-panel__textarea:disabled {
   opacity: 0.6;
 }
 
-.engianie-panel__send {
+.genie-panel__send {
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -412,17 +418,17 @@
   transition: all 0.2s ease;
 }
 
-.engianie-panel__send:hover:not(:disabled) {
+.genie-panel__send:hover:not(:disabled) {
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(0, 170, 255, 0.3);
 }
 
-.engianie-panel__send:disabled {
+.genie-panel__send:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
-.engianie-panel__disclaimer {
+.genie-panel__disclaimer {
   font-size: 0.65rem;
   color: var(--nj-color-text-subtle, #9ca3af);
   text-align: center;
@@ -430,39 +436,39 @@
 }
 
 /* ── Backdrop (mobile) ──────────────────────────────────────────── */
-.engianie-backdrop {
+.genie-backdrop {
   display: none;
 }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .engianie-panel {
+  .genie-panel {
     width: 100%;
   }
 
-  .engianie-tab--active {
+  .genie-tab--active {
     right: 0;
     opacity: 0;
     pointer-events: none;
   }
 
-  .engianie-backdrop {
+  .genie-backdrop {
     display: block;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.3);
     z-index: 998;
-    animation: engianieBackdropIn 0.3s ease;
+    animation: genieBackdropIn 0.3s ease;
   }
 
-  @keyframes engianieBackdropIn {
+  @keyframes genieBackdropIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
 }
 
 @media (max-width: 480px) {
-  .engianie-tab {
+  .genie-tab {
     top: auto;
     bottom: 16px;
     transform: none;

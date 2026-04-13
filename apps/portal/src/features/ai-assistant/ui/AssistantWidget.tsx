@@ -40,8 +40,8 @@ const SUGGESTED_PROMPTS = [
 
 const chatTransport = new DefaultChatTransport({ api: '/api/chat' });
 
-// ENGIenie branded SVG icon
-function EngienieIcon({ size = 24, className = '' }: { size?: number; className?: string }) {
+// Génie branded SVG icon
+function GenieIcon({ size = 24, className = '' }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}
@@ -52,16 +52,16 @@ function EngienieIcon({ size = 24, className = '' }: { size?: number; className?
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="engieniGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="genieGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#00AAFF" />
           <stop offset="50%" stopColor="#23D2B5" />
           <stop offset="100%" stopColor="#00AAFF" />
         </linearGradient>
       </defs>
       {/* Outer glow ring */}
-      <circle cx="16" cy="16" r="15" stroke="url(#engieniGrad)" strokeWidth="1.5" fill="none" opacity="0.3" />
+      <circle cx="16" cy="16" r="15" stroke="url(#genieGrad)" strokeWidth="1.5" fill="none" opacity="0.3" />
       {/* Main circle */}
-      <circle cx="16" cy="16" r="12" fill="url(#engieniGrad)" />
+      <circle cx="16" cy="16" r="12" fill="url(#genieGrad)" />
       {/* Lightning bolt — energy + AI */}
       <path d="M18 8L12 17h4l-2 7 6-9h-4l2-7z" fill="white" fillOpacity="0.95" />
       {/* Sparkle dots */}
@@ -134,16 +134,16 @@ export function AssistantWidget() {
     <>
       {/* Sidebar Tab Toggle — always visible on right edge */}
       <button
-        className={`engianie-tab ${isOpen ? 'engianie-tab--active' : ''}`}
+        className={`genie-tab ${isOpen ? 'genie-tab--active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? 'Fermer ENGIenie' : 'Ouvrir ENGIenie'}
-        title="ENGIenie — votre assistant énergie"
+        aria-label={isOpen ? 'Fermer Génie' : 'Ouvrir Génie'}
+        title="Génie by ENGIE — votre assistant énergie"
       >
-        <EngienieIcon size={20} />
-        <span className="engianie-tab__label">ENGIenie</span>
+        <GenieIcon size={20} />
+        <span className="genie-tab__label">Génie</span>
         {!isOpen && messages.length > 0 && (
           <NJBadge
-            className="engianie-tab__badge"
+            className="genie-tab__badge"
           >
             {messages.filter(m => m.role === 'assistant').length}
           </NJBadge>
@@ -152,25 +152,25 @@ export function AssistantWidget() {
 
       {/* Slide-out Sidebar Panel */}
       <aside
-        className={`engianie-panel ${isOpen ? 'engianie-panel--open' : ''}`}
-        aria-label="ENGIenie assistant"
+        className={`genie-panel ${isOpen ? 'genie-panel--open' : ''}`}
+        aria-label="Génie assistant"
         role="complementary"
       >
         {/* Header */}
-        <div className="engianie-panel__header">
-          <div className="engianie-panel__header-brand">
-            <EngienieIcon size={28} />
-            <div className="engianie-panel__header-text">
-              <h2 className="engianie-panel__title">ENGIenie</h2>
-              <span className="engianie-panel__subtitle">
+        <div className="genie-panel__header">
+          <div className="genie-panel__header-brand">
+            <GenieIcon size={28} />
+            <div className="genie-panel__header-text">
+              <h2 className="genie-panel__title">Génie <span className="genie-panel__title-brand">by ENGIE</span></h2>
+              <span className="genie-panel__subtitle">
                 {isLoading ? (
-                  <span className="engianie-status engianie-status--active">
-                    <span className="engianie-status__dot" />
+                  <span className="genie-status genie-status--active">
+                    <span className="genie-status__dot" />
                     Réflexion en cours…
                   </span>
                 ) : (
-                  <span className="engianie-status">
-                    <span className="engianie-status__dot engianie-status__dot--online" />
+                  <span className="genie-status">
+                    <span className="genie-status__dot genie-status__dot--online" />
                     Assistant énergie IA
                   </span>
                 )}
@@ -190,32 +190,32 @@ export function AssistantWidget() {
         </div>
 
         {/* Messages */}
-        <div className="engianie-panel__messages">
+        <div className="genie-panel__messages">
           {messages.length === 0 ? (
-            <div className="engianie-panel__welcome">
-              <div className="engianie-panel__welcome-icon">
-                <EngienieIcon size={48} />
+            <div className="genie-panel__welcome">
+              <div className="genie-panel__welcome-icon">
+                <GenieIcon size={48} />
               </div>
               <h3>Bonjour Marie ! 👋</h3>
               <p>
-                Je suis <strong>ENGIenie</strong>, votre assistant énergie intelligent.
+                Je suis <strong>Génie</strong>, votre assistant énergie intelligent.
                 Posez-moi des questions sur vos contrats, factures ou consommation.
               </p>
-              <div className="engianie-panel__suggestions">
+              <div className="genie-panel__suggestions">
                 {SUGGESTED_PROMPTS.map((prompt) => (
                   <button
                     key={prompt.text}
-                    className="engianie-suggestion"
+                    className="genie-suggestion"
                     onClick={() => handleSuggestedPrompt(prompt.text)}
                   >
-                    <span className="engianie-suggestion__icon">{prompt.icon}</span>
-                    <span className="engianie-suggestion__text">{prompt.text}</span>
+                    <span className="genie-suggestion__icon">{prompt.icon}</span>
+                    <span className="genie-suggestion__text">{prompt.text}</span>
                     {/* @ts-expect-error Fluid DS v6 types */}
-                    <NJIcon name="arrow_forward" size="16" className="engianie-suggestion__arrow" />
+                    <NJIcon name="arrow_forward" size="16" className="genie-suggestion__arrow" />
                   </button>
                 ))}
               </div>
-              <p className="engianie-panel__powered">
+              <p className="genie-panel__powered">
                 Propulsé par Gemini · Données sécurisées
               </p>
             </div>
@@ -223,21 +223,21 @@ export function AssistantWidget() {
             messages.map((message) => (
               <div
                 key={message.id}
-                className={`engianie-message engianie-message--${message.role}`}
+                className={`genie-message genie-message--${message.role}`}
               >
                 {message.role === 'assistant' && (
-                  <div className="engianie-message__avatar">
-                    <EngienieIcon size={20} />
+                  <div className="genie-message__avatar">
+                    <GenieIcon size={20} />
                   </div>
                 )}
 
-                <div className="engianie-message__content">
+                <div className="genie-message__content">
                   {message.parts?.map((part, index) => {
                     if (part.type === 'text' && 'text' in part) {
                       const text = part.text as string;
                       if (!text.trim()) return null;
                       return (
-                        <div key={`${message.id}-${index}`} className="engianie-message__text">
+                        <div key={`${message.id}-${index}`} className="genie-message__text">
                           {text.split('\n').map((line, i) => (
                             <p key={i}>{line}</p>
                           ))}
@@ -267,11 +267,11 @@ export function AssistantWidget() {
 
           {/* Streaming indicator */}
           {isLoading && messages.length > 0 && (
-            <div className="engianie-message engianie-message--assistant">
-              <div className="engianie-message__avatar">
-                <EngienieIcon size={20} />
+            <div className="genie-message genie-message--assistant">
+              <div className="genie-message__avatar">
+                <GenieIcon size={20} />
               </div>
-              <div className="engianie-message__typing">
+              <div className="genie-message__typing">
                 <span /><span /><span />
               </div>
             </div>
@@ -282,24 +282,24 @@ export function AssistantWidget() {
 
         {/* Input */}
         <form
-          id="engianie-form"
-          className="engianie-panel__input"
+          id="genie-form"
+          className="genie-panel__input"
           onSubmit={handleSubmit}
         >
-          <div className="engianie-panel__input-wrapper">
+          <div className="genie-panel__input-wrapper">
             <textarea
               ref={inputRef}
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={t('common.assistant_placeholder', 'Posez votre question...')}
-              className="engianie-panel__textarea"
+              className="genie-panel__textarea"
               disabled={isLoading}
               rows={1}
             />
             <button
               type="submit"
-              className="engianie-panel__send"
+              className="genie-panel__send"
               disabled={isLoading || !input.trim()}
               aria-label="Envoyer"
             >
@@ -307,8 +307,8 @@ export function AssistantWidget() {
               <NJIcon name="send" size="18" />
             </button>
           </div>
-          <p className="engianie-panel__disclaimer">
-            ENGIenie peut faire des erreurs. Vérifiez les informations importantes.
+          <p className="genie-panel__disclaimer">
+            Génie peut faire des erreurs. Vérifiez les informations importantes.
           </p>
         </form>
       </aside>
@@ -316,7 +316,7 @@ export function AssistantWidget() {
       {/* Backdrop for mobile */}
       {isOpen && (
         <div
-          className="engianie-backdrop"
+          className="genie-backdrop"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
