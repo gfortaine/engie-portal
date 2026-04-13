@@ -1,0 +1,75 @@
+{
+  "common": {
+    "demo": "Demo",
+    "loading": "Loading...",
+    "error": "Error"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "contracts": "Contracts",
+    "invoices": "Invoices",
+    "consumption": "Consumption",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "welcome": "Hello, {{name}}",
+    "subtitle": "Welcome to your ENGIE customer portal",
+    "contractOverview": "Contract Overview",
+    "totalContracts": "Total contracts",
+    "activeContracts": "Active contracts",
+    "monthlyTotal": "Monthly total",
+    "consumptionSummary": "This month's consumption",
+    "vsLastMonth": "vs last month",
+    "quickActions": "Quick Actions",
+    "actions": {
+      "viewInvoices": "View invoices",
+      "manageContracts": "Manage contracts",
+      "trackConsumption": "Track consumption",
+      "editProfile": "Edit profile"
+    }
+  },
+  "contracts": {
+    "title": "My contracts",
+    "type": "Type",
+    "meter": "Meter",
+    "monthlyAmount": "Monthly amount",
+    "types": {
+      "electricity": "Electricity",
+      "gas": "Gas",
+      "solar": "Solar"
+    }
+  },
+  "invoices": {
+    "title": "My invoices",
+    "reference": "Reference",
+    "period": "Period",
+    "issueDate": "Issue date",
+    "dueDate": "Due date",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "download": "Download"
+  },
+  "consumption": {
+    "title": "My consumption",
+    "total": "Total consumption",
+    "vsPreviousPeriod": "vs previous period",
+    "dailyBreakdown": "Daily breakdown"
+  },
+  "profile": {
+    "title": "My profile",
+    "name": "Name",
+    "email": "Email",
+    "tenant": "Customer space",
+    "roles": "Roles",
+    "preferences": "Preferences",
+    "language": "Language"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data. Please try again."
+  }
+}

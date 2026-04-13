@@ -1,0 +1,39 @@
+.widget {
+  padding: 1.5rem;
+}
+
+.title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--nj-semantic-color-text-primary, #1a1a1a);
+  transition: background-color 0.15s;
+}
+
+.actionItem:hover {
+  background: var(--nj-semantic-color-background-secondary, #fafafa);
+  text-decoration: none;
+}
+
+.actionIcon {
+  font-size: 1.25rem;
+}
+
+.actionLabel {
+  font-size: 0.875rem;
+}

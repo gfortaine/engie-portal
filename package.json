@@ -1,0 +1,27 @@
+{
+  "name": "engie-portal",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "build:analyze": "ANALYZE=true turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "generate": "plop",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "plop": "^4.0.0",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "turbo": "^2.9.6"
+  }
+}

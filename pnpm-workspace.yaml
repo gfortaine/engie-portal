@@ -1,0 +1,20 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+catalogs:
+  default:
+    react: ^19.1.0
+    react-dom: ^19.1.0
+    typescript: ^5.8.3
+    '@reduxjs/toolkit': ^2.7.0
+    react-redux: ^9.2.0
+    '@tanstack/react-router': ^1.120.0
+    '@trpc/client': ^11.1.0
+    '@trpc/server': ^11.1.0
+    zod: ^3.25.0
+    vitest: ^3.2.0
+    '@testing-library/react': ^16.3.0
+onlyBuiltDependencies:
+  - esbuild
+  - msw

@@ -1,0 +1,13 @@
+import { useTranslation } from 'react-i18next';
+import styles from './-{{pascalCase name}}Page.module.css';
+
+export function {{pascalCase name}}Page() {
+  const { t } = useTranslation();
+
+  return (
+    <div className={styles.page}>
+      <h1 className={styles.title}>{{pascalCase name}}</h1>
+      <p>TODO: implement {{dashCase name}} page</p>
+    </div>
+  );
+}

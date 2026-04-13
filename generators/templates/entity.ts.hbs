@@ -1,0 +1,23 @@
+import { rtkApi } from '@/shared/api/rtkApi';
+
+export interface {{pascalCase name}} {
+  id: string;
+  // TODO: define {{pascalCase name}} fields
+}
+
+export const {{camelCase name}}Api = rtkApi.injectEndpoints({
+  endpoints: (builder) => ({
+    get{{pascalCase name}}s: builder.query<{{pascalCase name}}[], void>({
+      query: () => (client) => client.{{camelCase name}}.list.query(),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: '{{pascalCase name}}' as const, id })),
+              { type: '{{pascalCase name}}', id: 'LIST' },
+            ]
+          : [{ type: '{{pascalCase name}}', id: 'LIST' }],
+    }),
+  }),
+});
+
+export const { useGet{{pascalCase name}}sQuery } = {{camelCase name}}Api;

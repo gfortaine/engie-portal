@@ -1,0 +1,66 @@
+.page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contractCard {
+  padding: 1.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.reference {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.address {
+  font-size: 0.875rem;
+  color: var(--nj-semantic-color-text-secondary, #666);
+  margin-top: 0.25rem;
+}
+
+.cardDetails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detailLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--nj-semantic-color-text-secondary, #666);
+}
+
+.detailValue {
+  font-size: 1rem;
+  font-weight: 500;
+}
