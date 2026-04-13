@@ -4,8 +4,8 @@ import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from '@tanstack/react-router';
 import {
-  NJButton,
   NJIcon,
+  NJIconButton,
   NJBadge,
 } from '@engie-group/fluid-design-system-react';
 import {
@@ -262,10 +262,7 @@ export function AssistantWidget() {
                 +
               </button>
             )}
-            {/* @ts-expect-error Fluid DS v6 types */}
-            <NJButton variant="inverse" onClick={() => setIsOpen(false)} aria-label="Fermer" title="Fermer" size="sm">
-              <NJIcon name="close" />
-            </NJButton>
+            <NJIconButton icon="close" variant="inverse" scale="sm" onClick={() => setIsOpen(false)} aria-label="Fermer" title="Fermer" />
           </div>
         </div>
 
