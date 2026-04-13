@@ -1,4 +1,4 @@
-/* Header — mostly handled by NJHeader. Custom avatar + logo styles. */
+/* Header — mostly handled by NJHeader. Custom logo + user styles. */
 
 .logoLink {
   display: flex;
@@ -10,20 +10,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--nj-core-color-ultramarine-800, #182663);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  font-family: var(--nj-semantic-font-family-sans-serif, 'Lato', sans-serif);
 }
 
 .userName {

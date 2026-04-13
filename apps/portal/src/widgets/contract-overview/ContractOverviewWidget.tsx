@@ -1,9 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { useGetContractsQuery } from '@/entities/contract';
-import { NJCard, NJCardBody, NJHeading, NJText, NJDivider, NJIcon } from '@engie-group/fluid-design-system-react';
+import { NJCard, NJCardBody, NJHeading, NJText, NJDivider, NJTag, NJIcon } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './ContractOverviewWidget.module.css';
+
+const ENERGY_ICON: Record<string, { name: string; tagVariant: 'blue' | 'orange' | 'green' }> = {
+  electricity: { name: 'bolt', tagVariant: 'blue' },
+  gas: { name: 'local_fire_department', tagVariant: 'orange' },
+  solar: { name: 'wb_sunny', tagVariant: 'green' },
+};
 
 export function ContractOverviewWidget() {
   const { t } = useTranslation();
@@ -61,7 +67,9 @@ export function ContractOverviewWidget() {
                 <NJText scale="sm" variant="secondary">{contract.address}</NJText>
               </div>
               <div className={styles.contractMeta}>
-                <NJIcon name={contract.type === 'electricity' ? 'bolt' : contract.type === 'gas' ? 'local_fire_department' : 'wb_sunny'} />
+                <NJTag variant={ENERGY_ICON[contract.type]?.tagVariant ?? 'blue'} scale="sm">
+                  <NJIcon name={ENERGY_ICON[contract.type]?.name ?? 'bolt'} />
+                </NJTag>
                 <StatusBadge status={contract.status} />
               </div>
             </div>

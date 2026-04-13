@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NJHeader as FluidHeader, NJBadge, NJButton, NJNavigationAction } from '@engie-group/fluid-design-system-react';
+import { NJHeader as FluidHeader, NJBadge, NJButton, NJNavigationAction, NJAvatarRoot, NJModal, NJModalContent } from '@engie-group/fluid-design-system-react';
 import { useAppAuth } from '@/features/auth';
 import styles from './Header.module.css';
 
@@ -29,6 +30,7 @@ function EngieLogo() {
 export function Header() {
   const { t } = useTranslation();
   const { user, signOut } = useAppAuth();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const initials = user?.name
     .split(' ')
@@ -36,36 +38,50 @@ export function Header() {
     .join('') ?? '';
 
   return (
-    <FluidHeader
-      layout="retracted"
-      logo={<EngieLogo />}
-      control={
-        <NJBadge variant="warning" emphasis="subtle">
-          {t('common.demo')}
-        </NJBadge>
-      }
-      utility={
-        <NJNavigationAction icon="notifications">
-          {t('common.notifications')}
-        </NJNavigationAction>
-      }
-      avatar={
-        <div className={styles.userSection}>
-          <div className={styles.avatar} title={user?.name}>
-            {initials}
+    <>
+      <FluidHeader
+        layout="retracted"
+        logo={<EngieLogo />}
+        control={
+          <NJBadge variant="warning" emphasis="subtle">
+            {t('common.demo')}
+          </NJBadge>
+        }
+        utility={
+          <NJNavigationAction icon="notifications">
+            {t('common.notifications')}
+          </NJNavigationAction>
+        }
+        avatar={
+          <div className={styles.userSection}>
+            <NJAvatarRoot
+              initials={initials}
+              label={user?.name ?? ''}
+              scale="sm"
+            />
+            <span className={styles.userName}>{user?.name}</span>
           </div>
-          <span className={styles.userName}>{user?.name}</span>
-        </div>
-      }
-      button={
-        <NJButton
-          emphasis="minimal"
-          variant="secondary"
-          icon="logout"
-          label={t('auth.logout')}
-          onClick={signOut}
-        />
-      }
-    />
+        }
+        button={
+          <NJButton
+            emphasis="minimal"
+            variant="secondary"
+            icon="logout"
+            label={t('auth.logout')}
+            onClick={() => setLogoutOpen(true)}
+          />
+        }
+      />
+
+      <NJModal open={logoutOpen} onClose={() => setLogoutOpen(false)}>
+        <NJModalContent
+          title={t('auth.logoutConfirmTitle', 'Déconnexion')}
+          primaryAction={{ label: t('auth.logoutConfirm', 'Se déconnecter'), onClick: signOut }}
+          secondaryAction={{ label: t('common.cancel', 'Annuler'), onClick: () => setLogoutOpen(false) }}
+        >
+          {t('auth.logoutConfirmMessage', 'Êtes-vous sûr de vouloir vous déconnecter ?')}
+        </NJModalContent>
+      </NJModal>
+    </>
   );
 }

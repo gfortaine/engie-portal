@@ -7,6 +7,11 @@
   width: 100%;
 }
 
+.toolbar {
+  margin-top: 1rem;
+  max-width: 400px;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -21,22 +26,21 @@
   margin-bottom: 1rem;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .cardDetails {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--nj-core-color-grey-200, #e0e0e0);
 }
 
 .detail {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-
-.detailValueRow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }

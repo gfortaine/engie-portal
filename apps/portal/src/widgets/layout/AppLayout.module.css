@@ -10,8 +10,14 @@
   min-height: 0;
 }
 
+.mainWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
 .main {
   flex: 1;
-  overflow-y: auto;
   background: var(--nj-core-color-grey-100, #f5f5f5);
 }

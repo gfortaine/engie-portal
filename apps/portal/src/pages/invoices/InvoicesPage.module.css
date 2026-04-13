@@ -62,3 +62,14 @@
   font-variant-numeric: tabular-nums;
   color: var(--nj-core-color-ultramarine-800, #182663);
 }
+
+.toolbar {
+  margin-top: 1rem;
+  max-width: 400px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}

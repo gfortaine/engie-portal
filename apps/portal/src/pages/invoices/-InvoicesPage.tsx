@@ -1,13 +1,33 @@
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetInvoicesQuery } from '@/entities/invoice';
-import { NJDisplay, NJButton, NJInlineMessage } from '@engie-group/fluid-design-system-react';
+import { NJDisplay, NJButton, NJInlineMessage, NJInputSearch, NJPaginationRoot, NJPaginationItem, NJPaginationArrow } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
+import { PageBreadcrumb } from '@/shared/ui/PageBreadcrumb';
 import styles from './InvoicesPage.module.css';
+
+const PAGE_SIZE = 5;
 
 export function InvoicesPage() {
   const { t } = useTranslation();
   const { data: invoices, isLoading, error } = useGetInvoicesQuery();
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    if (!invoices) return [];
+    if (!search) return invoices;
+    const q = search.toLowerCase();
+    return invoices.filter(
+      (inv) =>
+        inv.reference.toLowerCase().includes(q) ||
+        inv.period.toLowerCase().includes(q),
+    );
+  }, [invoices, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -35,7 +55,18 @@ export function InvoicesPage() {
 
   return (
     <div className={styles.page}>
+      <PageBreadcrumb items={[{ label: t('nav.dashboard'), to: '/' }, { label: t('invoices.title') }]} />
       <NJDisplay scale="xs" as="h1">{t('invoices.title')}</NJDisplay>
+
+      <div className={styles.toolbar}>
+        <NJInputSearch
+          id="invoice-search"
+          label={t('invoices.search', 'Rechercher une facture')}
+          value={search}
+          onChange={(v) => { setSearch(v ?? ''); setPage(1); }}
+        />
+      </div>
+
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -50,7 +81,7 @@ export function InvoicesPage() {
             </tr>
           </thead>
           <tbody>
-            {invoices?.map((invoice) => (
+            {paged.map((invoice) => (
               <tr key={invoice.id}>
                 <td className={styles.reference}>{invoice.reference}</td>
                 <td>{invoice.period}</td>
@@ -79,6 +110,32 @@ export function InvoicesPage() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className={styles.pagination}>
+          <NJPaginationRoot>
+            <NJPaginationArrow
+              direction="previous"
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            />
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <NJPaginationItem
+                key={i}
+                selected={i + 1 === page}
+                onClick={() => setPage(i + 1)}
+              >
+                {i + 1}
+              </NJPaginationItem>
+            ))}
+            <NJPaginationArrow
+              direction="next"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            />
+          </NJPaginationRoot>
+        </div>
+      )}
     </div>
   );
 }

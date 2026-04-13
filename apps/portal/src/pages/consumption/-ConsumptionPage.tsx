@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetConsumptionQuery } from '@/entities/meter';
-import { NJCard, NJCardBody, NJDisplay, NJHeading, NJText, NJSelectRoot } from '@engie-group/fluid-design-system-react';
+import { NJCard, NJCardBody, NJDisplay, NJHeading, NJText, NJSelectRoot, NJSelectItem, NJProgress, NJTooltip } from '@engie-group/fluid-design-system-react';
 import { Skeleton } from '@/shared/ui/Skeleton';
+import { PageBreadcrumb } from '@/shared/ui/PageBreadcrumb';
 import styles from './ConsumptionPage.module.css';
 
 const PERIODS = ['2026-01', '2026-02', '2026-03', '2025-12', '2025-11', '2025-10'];
+
+function formatPeriod(p: string) {
+  return new Date(`${p}-01`).toLocaleDateString('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
 
 export function ConsumptionPage() {
   const { t } = useTranslation();
@@ -18,23 +26,22 @@ export function ConsumptionPage() {
 
   return (
     <div className={styles.page}>
+      <PageBreadcrumb items={[{ label: t('nav.dashboard'), to: '/' }, { label: t('consumption.title') }]} />
       <NJDisplay scale="xs" as="h1">{t('consumption.title')}</NJDisplay>
 
       <div className={styles.controls}>
-        <select
+        <NJSelectRoot
+          id="period-select"
+          label={t('consumption.period', 'Période')}
           value={selectedPeriod}
-          onChange={(e) => setSelectedPeriod(e.target.value)}
-          className={styles.periodSelect}
+          onChange={(v) => v && setSelectedPeriod(v)}
         >
           {PERIODS.map((p) => (
-            <option key={p} value={p}>
-              {new Date(`${p}-01`).toLocaleDateString('fr-FR', {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </option>
+            <NJSelectItem key={p} value={p}>
+              {formatPeriod(p)}
+            </NJSelectItem>
           ))}
-        </select>
+        </NJSelectRoot>
       </div>
 
       {isLoading ? (
@@ -69,21 +76,39 @@ export function ConsumptionPage() {
             <NJCardBody>
               <NJHeading scale="xs">{t('consumption.dailyBreakdown')}</NJHeading>
               <div className={styles.chart}>
-                {data.points.map((point, i) => (
-                  <div key={i} className={styles.bar}>
-                    <div
-                      className={styles.barFill}
-                      style={{
-                        height: `${(point.value / Math.max(...data.points.map((p) => p.value))) * 100}%`,
-                      }}
-                      title={`${point.date}: ${point.value} ${data.unit}`}
-                    />
-                    <span className={styles.barLabel}>
-                      {new Date(point.date).getDate()}
-                    </span>
-                  </div>
-                ))}
+                {data.points.map((point, i) => {
+                  const maxVal = Math.max(...data.points.map((p) => p.value));
+                  return (
+                    <div key={i} className={styles.bar}>
+                      <NJTooltip label={`${new Date(point.date).toLocaleDateString('fr-FR')}: ${point.value} ${data.unit}`}>
+                        <div
+                          className={styles.barFill}
+                          style={{ height: `${(point.value / maxVal) * 100}%` }}
+                        />
+                      </NJTooltip>
+                      <span className={styles.barLabel}>
+                        {new Date(point.date).getDate()}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
+            </NJCardBody>
+          </NJCard>
+
+          <NJCard>
+            <NJCardBody>
+              <NJHeading scale="xs">{t('consumption.monthlyGoal', 'Objectif mensuel')}</NJHeading>
+              <NJProgress
+                value={Math.round((data.total / 500) * 100)}
+                description={`${data.total} / 500 ${data.unit}`}
+                subscriptMessage={
+                  data.total <= 500
+                    ? t('consumption.onTrack', 'Vous êtes dans les limites')
+                    : t('consumption.overBudget', 'Objectif dépassé')
+                }
+                variant={data.total <= 500 ? 'brand' : 'danger'}
+              />
             </NJCardBody>
           </NJCard>
         </div>
