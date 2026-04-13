@@ -15,6 +15,8 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.52",
+    "@ai-sdk/react": "^3.0.160",
     "@engie-group/fluid-design-system": "6.1.0",
     "@engie-group/fluid-design-system-react": "6.1.0",
     "@engie-group/fluid-design-tokens": "6.1.0",
@@ -25,6 +27,7 @@
     "@reduxjs/toolkit": "catalog:default",
     "@tanstack/react-router": "catalog:default",
     "@trpc/client": "catalog:default",
+    "ai": "^6.0.158",
     "i18next": "^25.1.0",
     "i18next-browser-languagedetector": "^8.0.0",
     "i18next-http-backend": "^3.0.0",

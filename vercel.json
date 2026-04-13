@@ -11,6 +11,7 @@
   },
   "rewrites": [
     { "source": "/api/trpc/:path*", "destination": "/api/trpc/[trpc]" },
+    { "source": "/api/chat", "destination": "/api/chat/route" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

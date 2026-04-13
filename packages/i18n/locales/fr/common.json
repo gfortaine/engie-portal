@@ -5,7 +5,8 @@
     "error": "Erreur",
     "notifications": "Notifications",
     "cancel": "Annuler",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "assistant_placeholder": "Posez votre question..."
   },
   "status": {
     "active": "Actif",

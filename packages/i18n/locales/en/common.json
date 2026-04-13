@@ -5,7 +5,8 @@
     "error": "Error",
     "notifications": "Notifications",
     "cancel": "Cancel",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "assistant_placeholder": "Ask your question..."
   },
   "status": {
     "active": "Active",
