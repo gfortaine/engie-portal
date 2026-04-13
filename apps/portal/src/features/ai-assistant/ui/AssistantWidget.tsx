@@ -4,6 +4,8 @@ import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from '@tanstack/react-router';
 import {
+  NJButton,
+  NJIcon,
   NJBadge,
 } from '@engie-group/fluid-design-system-react';
 import {
@@ -260,14 +262,10 @@ export function AssistantWidget() {
                 +
               </button>
             )}
-            <button
-              className="genie-close-btn"
-              onClick={() => setIsOpen(false)}
-              aria-label="Fermer"
-              title="Fermer"
-            >
-              ✕
-            </button>
+            {/* @ts-expect-error Fluid DS v6 types */}
+            <NJButton variant="inverse" onClick={() => setIsOpen(false)} aria-label="Fermer" title="Fermer" size="sm">
+              <NJIcon name="close" />
+            </NJButton>
           </div>
         </div>
 
@@ -292,7 +290,8 @@ export function AssistantWidget() {
                   >
                     <span className="genie-suggestion__icon">{prompt.icon}</span>
                     <span className="genie-suggestion__text">{prompt.text}</span>
-                    <span className="genie-suggestion__arrow">→</span>
+                    {/* @ts-expect-error Fluid DS v6 types */}
+                    <NJIcon name="arrow_forward" size="16" className="genie-suggestion__arrow" />
                   </button>
                 ))}
               </div>
@@ -427,7 +426,8 @@ export function AssistantWidget() {
               disabled={isLoading || !input.trim()}
               aria-label="Envoyer"
             >
-              ➤
+              {/* @ts-expect-error Fluid DS v6 types */}
+              <NJIcon name="send" size="18" />
             </button>
           </div>
           <p className="genie-panel__disclaimer">
