@@ -74,6 +74,74 @@ test.describe('AI Assistant — Génie', () => {
     expect(count).toBeGreaterThanOrEqual(1);
   });
 
+  test('session persists across page refresh', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+
+    // Open Génie and send a message
+    const tab = page.locator('.genie-tab');
+    await tab.click();
+    const input = page.locator('.genie-panel__textarea');
+    await input.fill('Bonjour, test de persistance');
+    await input.press('Enter');
+
+    // Wait for response
+    await page.waitForTimeout(10000);
+
+    // Verify messages exist
+    const messagesBeforeRefresh = page.locator('.genie-message');
+    const countBefore = await messagesBeforeRefresh.count();
+    console.log('Messages before refresh:', countBefore);
+    expect(countBefore).toBeGreaterThanOrEqual(2);
+
+    // Check sessionId is stored in sessionStorage
+    const sessionIdBefore = await page.evaluate(() => sessionStorage.getItem('genie-session-id'));
+    console.log('Session ID before refresh:', sessionIdBefore);
+    expect(sessionIdBefore).toBeTruthy();
+
+    // Refresh the page
+    await page.reload();
+    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+
+    // Open Génie again
+    await tab.click();
+    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+
+    // Wait for session restore
+    await page.waitForTimeout(5000);
+
+    // Verify sessionId is preserved
+    const sessionIdAfter = await page.evaluate(() => sessionStorage.getItem('genie-session-id'));
+    console.log('Session ID after refresh:', sessionIdAfter);
+    expect(sessionIdAfter).toBe(sessionIdBefore);
+
+    // Verify messages are restored
+    const messagesAfterRefresh = page.locator('.genie-message');
+    const countAfter = await messagesAfterRefresh.count();
+    console.log('Messages after refresh:', countAfter);
+    expect(countAfter).toBeGreaterThanOrEqual(2);
+  });
+
+  test('history drawer shows sessions', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+
+    // Open Génie
+    const tab = page.locator('.genie-tab');
+    await tab.click();
+    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+
+    // Click history button
+    const historyBtn = page.locator('[aria-label="Historique"]');
+    await expect(historyBtn).toBeVisible();
+    await historyBtn.click();
+
+    // History drawer should appear
+    const history = page.locator('.genie-history');
+    await expect(history).toBeVisible();
+    await expect(page.locator('.genie-history__title')).toContainText('Conversations récentes');
+  });
+
   test('tab shows Génie branding', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('.nj-sidebar', { timeout: 10000 });

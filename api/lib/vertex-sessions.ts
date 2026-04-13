@@ -39,6 +39,24 @@ function getAuth(): GoogleAuth {
 }
 
 async function getAccessToken(): Promise<string> {
+  // In serverless (Vercel) — use service account credentials
+  const credsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (credsJson) {
+    const client = await getAuth().getClient();
+    const tokenResponse = await client.getAccessToken();
+    return tokenResponse.token ?? '';
+  }
+
+  // Local dev — use gcloud CLI directly (ADC authorized_user type
+  // doesn't support aiplatform.sessions scope properly)
+  try {
+    const { execSync } = await import('child_process');
+    const token = execSync('gcloud auth print-access-token', { encoding: 'utf-8' }).trim();
+    if (token) return token;
+  } catch {
+    // Fall through to GoogleAuth
+  }
+
   const client = await getAuth().getClient();
   const tokenResponse = await client.getAccessToken();
   return tokenResponse.token ?? '';

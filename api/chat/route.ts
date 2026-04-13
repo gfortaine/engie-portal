@@ -259,12 +259,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // Include sessionId in response headers for client to track
+    const streamHeaders: Record<string, string> = {};
     if (sessionId) {
-      res.setHeader('X-Session-Id', sessionId);
+      streamHeaders['X-Session-Id'] = sessionId;
+      streamHeaders['Access-Control-Expose-Headers'] = 'X-Session-Id';
     }
 
     // Pipe the UI message stream to the Node.js response
-    result.pipeUIMessageStreamToResponse(res);
+    result.pipeUIMessageStreamToResponse(res, {
+      headers: streamHeaders,
+    });
   } catch (error) {
     console.error('Chat API error:', error);
     res.status(500).json({ error: 'Internal server error' });
