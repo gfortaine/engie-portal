@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect } from 'react';
 import { useAppDispatch } from '@/app/providers/store';
-import { setUser } from '../model/authSlice';
+import { setUser, logout } from '../model/authSlice';
 
 const MOCK_USER = {
   sub: 'usr_001',
@@ -11,6 +11,8 @@ const MOCK_USER = {
   avatar: undefined,
 };
 
+const AUTH_KEY = 'genie-auth';
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -19,8 +21,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // Mock: auto-login for demo — replace with oidc-client-ts in production
-    dispatch(setUser(MOCK_USER));
+    if (sessionStorage.getItem(AUTH_KEY) === 'true') {
+      dispatch(setUser(MOCK_USER));
+    } else {
+      dispatch(logout());
+    }
   }, [dispatch]);
 
   return <>{children}</>;

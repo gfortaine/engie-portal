@@ -8,6 +8,7 @@ export function useAppAuth() {
   const dispatch = useAppDispatch();
 
   const signOut = useCallback(() => {
+    sessionStorage.removeItem('genie-auth');
     dispatch(logout());
   }, [dispatch]);
 
