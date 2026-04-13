@@ -1,92 +1,73 @@
+/* ENGIE brand colors: #00AAFF (logo blue) → #23D2B5 (mint teal) gradient */
+/* Interactive blue: #007ACD (Blue Bolt — accessible) */
+
 .login-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #00aaff 0%, #009b3a 50%, #00d959 100%);
+  background: var(--nj-core-color-grey-100, #f5f5f5);
   font-family: var(--nj-semantic-font-family-base, 'Lato', sans-serif);
 }
 
 .login-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  padding: 48px 40px 40px;
+  background: var(--nj-core-color-white, #fff);
+  border-radius: var(--nj-size-space-16, 16px);
+  box-shadow: var(--nj-elevation-shadow-md, 0 4px 24px rgba(0, 0, 0, 0.1));
+  padding: 0 40px 40px;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.login-gradient-ray {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, #00AAFF 0%, #23D2B5 100%);
+  margin-bottom: 32px;
 }
 
 .login-logo {
-  height: 48px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .login-title {
-  font-size: 1.5rem;
+  font-size: var(--nj-semantic-font-size-heading-md, 1.5rem);
   font-weight: 700;
-  color: var(--nj-semantic-color-text-brand-primary, #00aaff);
-  margin-bottom: 4px;
+  color: var(--nj-core-color-blue-800, #007ACD);
+  margin: 0 0 4px;
 }
 
 .login-subtitle {
-  font-size: 0.95rem;
-  color: var(--nj-semantic-color-text-secondary, #5f6368);
-  margin-bottom: 32px;
+  font-size: var(--nj-semantic-font-size-body-md, 0.95rem);
+  color: var(--nj-core-color-grey-600, #5f6368);
+  margin: 0 0 28px;
 }
 
 .login-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.login-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.login-field label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--nj-semantic-color-text-primary, #333);
-}
-
-.login-field input {
-  padding: 12px 14px;
-  border: 1.5px solid var(--nj-semantic-color-border-default, #c4c4c4);
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.login-field input:focus {
-  border-color: var(--nj-semantic-color-border-brand-primary, #00aaff);
-  box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.12);
-}
-
-.login-error {
-  background: var(--nj-semantic-color-background-danger-subtle, #fde8e8);
-  color: var(--nj-semantic-color-text-danger, #c00);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.875rem;
-  text-align: center;
+  gap: 16px;
 }
 
 .login-submit {
   margin-top: 8px;
+  width: 100%;
+}
+
+/* Fluid DS NJFormItem overrides for login context */
+.login-form .nj-form-item {
+  width: 100%;
 }
 
 .login-hint {
   margin-top: 16px;
   font-size: 0.8rem;
-  color: var(--nj-semantic-color-text-secondary, #999);
+  color: var(--nj-core-color-grey-500, #999);
   text-align: center;
 }

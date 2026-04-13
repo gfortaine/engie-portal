@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react';
-import { NJButton } from '@engie-group/fluid-design-system-react';
+import { NJButton, NJFormItem, NJInlineMessage } from '@engie-group/fluid-design-system-react';
 import { useAppDispatch } from '@/app/providers/store';
 import { setUser } from '../model/authSlice';
 import './LoginPage.css';
@@ -35,42 +35,54 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <img
-          src="https://www.engie.com/themes/flavor_starter/logo.svg"
-          alt="ENGIE"
-          className="login-logo"
-        />
-        <div className="login-title">Espace Client</div>
-        <div className="login-subtitle">Connectez-vous à votre portail énergie</div>
+        {/* ENGIE brand gradient ray — #00AAFF → #23D2B5 */}
+        <div className="login-gradient-ray" />
+
+        <svg className="login-logo" viewBox="0 0 140 40" width="180" height="52" aria-label="ENGIE">
+          <defs>
+            <linearGradient id="engie-login-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00aaff" />
+              <stop offset="100%" stopColor="#23d2b5" />
+            </linearGradient>
+          </defs>
+          <rect width="140" height="3" rx="1.5" fill="url(#engie-login-grad)" />
+          <text x="0" y="28" fill="#182663" fontFamily="Lato, sans-serif" fontWeight="900" fontSize="22" letterSpacing="2">
+            ENGIE
+          </text>
+          <text x="90" y="28" fill="#007acd" fontFamily="Lato, sans-serif" fontWeight="400" fontSize="13">
+            Portal
+          </text>
+        </svg>
+
+        <h1 className="login-title">Espace Client</h1>
+        <p className="login-subtitle">Connectez-vous à votre portail énergie</p>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label htmlFor="login-email">Adresse e-mail</label>
-            <input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(''); }}
-              placeholder="nom@exemple.com"
-              autoComplete="email"
-              required
-            />
-          </div>
+          <NJFormItem
+            id="login-email"
+            label="Adresse e-mail"
+            value={email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setEmail(e.target.value); setError(''); }}
+            placeholder="nom@exemple.com"
+            type="email"
+            required
+          />
 
-          <div className="login-field">
-            <label htmlFor="login-password">Mot de passe</label>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(''); }}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <NJFormItem
+            id="login-password"
+            label="Mot de passe"
+            value={password}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPassword(e.target.value); setError(''); }}
+            placeholder="••••••••"
+            type="password"
+            required
+          />
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <NJInlineMessage variant="error">
+              {error}
+            </NJInlineMessage>
+          )}
 
           <NJButton
             type="submit"
