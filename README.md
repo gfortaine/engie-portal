@@ -5,25 +5,26 @@
 
 > Enterprise customer portal for ENGIE's Sales-to-Cash modernization program. React 19 SPA with type-safe BFF, built on ENGIE's official Fluid Design System.
 
-🔗 **[Live Demo — Portal](https://portal-taupe-six.vercel.app)** · 🔗 **[Live Demo — BFF](https://bff-three-omega.vercel.app/api/trpc/contract.list)** · 📐 **[Fluid Design System](https://www.engie.design/fluid-design-system/)**
+🔗 **[Live Demo](https://engie-portal-fortaine.vercel.app)** · 📐 **[Fluid Design System](https://www.engie.design/fluid-design-system/)**
 
 ---
 
 ## Architecture
 
 ```
-  Vercel Project: portal                    Vercel Project: bff
-  portal-taupe-six.vercel.app               bff-three-omega.vercel.app
-┌──────────────────────────────┐          ┌─────────────────────────┐
-│     Static SPA (Vite)        │          │  Serverless Functions   │
-│  ┌────────────────────────┐  │  HTTPS   │  ┌───────────────────┐  │
-│  │  React 19 + Redux TK  │  │ ──────── │  │  tRPC v11 BFF     │  │
-│  │  TanStack Router       │  │          │  │  @vercel/node      │  │
-│  │  Fluid Design System   │  │          │  │  Mock Data Layer  │  │
-│  │  RTK Query + tRPC      │  │          │  │  CORS enabled     │  │
-│  │  i18n (FR/EN)          │  │          │  └───────────────────┘  │
-│  └────────────────────────┘  │          │         /api/trpc/*     │
-└──────────────────────────────┘          └─────────────────────────┘
+  engie-portal-fortaine.vercel.app (FORTAINE Software — Pro)
+┌──────────────────────────────────────────────────────────────┐
+│                     Single Vercel Project                     │
+│  ┌────────────────────────┐    ┌─────────────────────────┐   │
+│  │  Static SPA (Vite)     │    │  Serverless Functions   │   │
+│  │  React 19 + Redux TK  │    │  tRPC v11 BFF           │   │
+│  │  TanStack Router       │    │  @vercel/node           │   │
+│  │  Fluid Design System   │────│  Mock Data Layer        │   │
+│  │  RTK Query + tRPC      │    │  /api/trpc/*            │   │
+│  │  i18n (FR/EN)          │    └─────────────────────────┘   │
+│  └────────────────────────┘                                  │
+│           /                                                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Tech Stack
