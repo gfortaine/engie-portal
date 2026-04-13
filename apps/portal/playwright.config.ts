@@ -20,18 +20,23 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: [
-    {
-      command: 'pnpm --filter @engie-portal/bff dev',
-      port: 4000,
-      reuseExistingServer: !process.env.CI,
-      timeout: 10_000,
-    },
-    {
-      command: 'pnpm --filter @engie-portal/portal dev',
-      port: 3000,
-      reuseExistingServer: !process.env.CI,
-      timeout: 10_000,
-    },
-  ],
+  // Skip webServer when using an external server (PW_BASE_URL)
+  ...(process.env.PW_BASE_URL
+    ? {}
+    : {
+        webServer: [
+          {
+            command: 'pnpm --filter @engie-portal/bff dev',
+            port: 4000,
+            reuseExistingServer: !process.env.CI,
+            timeout: 10_000,
+          },
+          {
+            command: 'pnpm --filter @engie-portal/portal dev',
+            port: 3000,
+            reuseExistingServer: !process.env.CI,
+            timeout: 10_000,
+          },
+        ],
+      }),
 });
