@@ -25,7 +25,7 @@ const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'neutral'
 export function ContractResultList({ data }: { data: ContractResult[] }) {
   const { t } = useTranslation();
 
-  if (data.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return (
       <NJCard className="genui-card">
         <NJCardBody>

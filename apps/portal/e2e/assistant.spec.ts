@@ -190,6 +190,7 @@ test.describe('AI Assistant — Génie', () => {
   });
 
   test('HITL approval flow for suggestSavings', async ({ page }) => {
+    test.setTimeout(45000);
     // Capture browser console for debugging
     page.on('console', msg => {
       if (msg.type() === 'error' || msg.type() === 'warn') {

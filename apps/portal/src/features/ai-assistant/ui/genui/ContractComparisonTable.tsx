@@ -23,6 +23,7 @@ const energyIcons: Record<string, string> = { electricity: '⚡', gas: '🔥', s
 
 export function ContractComparisonTable({ data }: { data: ContractComparison[] }) {
   const { t } = useTranslation();
+  if (!Array.isArray(data)) return null;
   const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
     active: 'success', pending: 'warning', terminated: 'neutral',
   } as const;

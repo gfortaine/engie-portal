@@ -30,7 +30,7 @@ const severityToVariant: Record<string, string> = {
 };
 
 export function AlertsPanel({ data }: { data: Alert[] }) {
-  if (data.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return (
       <NJCard className="genui-card">
         <NJCardBody>

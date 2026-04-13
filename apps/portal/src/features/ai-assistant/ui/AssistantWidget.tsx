@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, Component, type FormEvent, type ChangeEvent, type ReactNode, type ErrorInfo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,50 @@ import {
   NJIconButton,
   NJBadge,
 } from '@engie-group/fluid-design-system-react';
+
+// ── Error Boundary to prevent Génie crashes from taking down the page ──
+class GenieErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[Génie] Error boundary caught:', error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, color: '#c00', fontSize: 13 }}>
+          <p><strong>Génie a rencontré une erreur</strong></p>
+          <p style={{ fontFamily: 'monospace', fontSize: 11 }}>{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })} style={{ marginTop: 8, cursor: 'pointer' }}>
+            Réessayer
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Safe wrapper for GenUI tool components — guards against undefined/malformed data
+function SafeToolComponent({ Component: Comp, data, toolName }: { Component: React.ComponentType<{ data: unknown }>; data: unknown; toolName: string }) {
+  if (data == null) {
+    return <div className="genui-card" style={{ padding: 16, color: '#666' }}>Résultat de {toolName} en cours de chargement…</div>;
+  }
+  try {
+    return <Comp data={data} />;
+  } catch (err) {
+    console.error(`[Génie] GenUI component ${toolName} crashed:`, err);
+    return <div className="genui-card" style={{ padding: 16, color: '#c00' }}>Erreur d&apos;affichage pour {toolName}</div>;
+  }
+}
 import {
   BillBreakdownCard,
   ConsumptionInsightChart,
@@ -158,6 +202,14 @@ function eventsToMessages(events: Array<{ author: string; content?: { parts?: Ar
 }
 
 export function AssistantWidget() {
+  return (
+    <GenieErrorBoundary>
+      <AssistantWidgetInner />
+    </GenieErrorBoundary>
+  );
+}
+
+function AssistantWidgetInner() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -667,7 +719,7 @@ export function AssistantWidget() {
                       }
 
                       if (toolPart.state === 'output-available' && Component) {
-                        return <Component key={toolPart.toolCallId} data={toolPart.output} />;
+                        return <SafeToolComponent key={toolPart.toolCallId} Component={Component} data={toolPart.output} toolName={toolName} />;
                       }
                     }
 
