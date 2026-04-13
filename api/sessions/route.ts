@@ -13,6 +13,7 @@ import {
   getSessionEvents,
   listSessions,
   deleteSession,
+  updateSession,
 } from '../lib/vertex-sessions.js';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText } from 'ai';
@@ -56,24 +57,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'PATCH') {
-      const { userMessage } = req.body as { userMessage: string };
+      const { sessionId, userMessage } = req.body as { sessionId?: string; userMessage: string };
       if (!userMessage) return res.status(400).json({ error: 'userMessage required' });
 
       const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      let title: string;
+
       if (!apiKey) {
-        // Fallback: truncate first message
-        const title = userMessage.length > 30 ? userMessage.slice(0, 27) + '…' : userMessage;
-        return res.json({ title });
+        title = userMessage.length > 30 ? userMessage.slice(0, 27) + '…' : userMessage;
+      } else {
+        const google = createGoogleGenerativeAI({ apiKey });
+        const { text } = await generateText({
+          model: google('gemini-3.1-flash-lite-preview'),
+          prompt: `Génère un titre court (3-5 mots max, en français) pour cette conversation avec un assistant énergie. Pas de guillemets, pas de ponctuation finale.\n\nMessage: "${userMessage}"`,
+          maxTokens: 20,
+        });
+        title = text.trim();
       }
 
-      const google = createGoogleGenerativeAI({ apiKey });
-      const { text: title } = await generateText({
-        model: google('gemini-3.1-flash-lite-preview'),
-        prompt: `Génère un titre court (3-5 mots max, en français) pour cette conversation avec un assistant énergie. Pas de guillemets, pas de ponctuation finale.\n\nMessage: "${userMessage}"`,
-        maxTokens: 20,
-      });
+      // Persist title as displayName on the Vertex AI session
+      if (sessionId && title) {
+        try {
+          await updateSession(sessionId, { displayName: title });
+        } catch (e) {
+          console.warn('[api/sessions] Failed to update session displayName:', e);
+        }
+      }
 
-      return res.json({ title: title.trim() });
+      return res.json({ title });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

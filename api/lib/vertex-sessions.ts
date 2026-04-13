@@ -89,6 +89,7 @@ export interface VertexSession {
   updateTime: string;
   userId?: string;
   expireTime?: string;
+  displayName?: string;
 }
 
 /** Create a new session for a given user (expires after 7 days) */
@@ -130,6 +131,18 @@ export async function listSessions(userId?: string): Promise<VertexSession[]> {
 /** Delete a session */
 export async function deleteSession(sessionId: string): Promise<void> {
   await vertexFetch(`/sessions/${sessionId}`, { method: 'DELETE' });
+}
+
+/** Update session metadata (e.g. displayName for conversation title) */
+export async function updateSession(
+  sessionId: string,
+  updates: { displayName?: string },
+): Promise<VertexSession> {
+  const fields = Object.keys(updates).join(',');
+  return (await vertexFetch(`/sessions/${sessionId}?updateMask=${fields}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })) as VertexSession;
 }
 
 // ── Events (message persistence) ──────────────────────────────────

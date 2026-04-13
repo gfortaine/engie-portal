@@ -545,6 +545,16 @@
   padding: 16px 0;
 }
 
+.genie-history__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0;
+  color: var(--nj-semantic-color-text-neutral-secondary-default, #999);
+  font-size: 13px;
+}
+
 .genie-history__item {
   display: flex;
   align-items: center;

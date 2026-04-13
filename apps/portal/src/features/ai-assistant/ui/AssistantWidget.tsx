@@ -7,6 +7,7 @@ import {
   NJIcon,
   NJIconButton,
   NJBadge,
+  NJSpinner,
 } from '@engie-group/fluid-design-system-react';
 
 // ── Error Boundary to prevent Génie crashes from taking down the page ──
@@ -214,6 +215,7 @@ function AssistantWidgetInner() {
   );
   const [isRestoring, setIsRestoring] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [sessionList, setSessionList] = useState<Array<{ id: string; createTime: string; preview: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -320,7 +322,7 @@ function AssistantWidgetInner() {
         fetch('/api/sessions', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userMessage: firstUserText }),
+          body: JSON.stringify({ sessionId, userMessage: firstUserText }),
         })
           .then(res => res.json())
           .then(data => {
@@ -335,22 +337,25 @@ function AssistantWidgetInner() {
 
   // ── Load session list for history drawer ──
   const loadSessionList = useCallback(async () => {
+    setIsLoadingHistory(true);
     try {
       const res = await fetch('/api/sessions?userId=demo-user');
       if (!res.ok) return;
       const data = await res.json();
       const titleCache = getTitleCache();
-      // Limit to most recent 10 sessions to avoid excessive API calls
+      // Limit to most recent 10 sessions
       const recentSessions = (data.sessions ?? []).slice(0, 10);
-      const sessions = recentSessions.map((s: { name: string; createTime: string }) => {
+      const sessions = recentSessions.map((s: { name: string; createTime: string; displayName?: string }) => {
         const parts = s.name.split('/');
         const id = parts[parts.length - 1] ?? s.name;
-        const preview = titleCache[id] || '';
+        // Priority: titleCache > Vertex AI displayName > empty
+        const preview = titleCache[id] || s.displayName || '';
         return { id, createTime: s.createTime, preview };
       });
       setSessionList(sessions);
+      setIsLoadingHistory(false);
 
-      // Background: fetch previews for sessions without titles (max 5 at a time)
+      // Background: fetch previews for sessions without titles (max 5)
       const needPreview = sessions.filter((s: { preview: string }) => !s.preview).slice(0, 5);
       for (const s of needPreview) {
         try {
@@ -364,23 +369,25 @@ function AssistantWidgetInner() {
               const text = firstUserEvent.content?.parts?.[0]?.text ?? '';
               const truncated = text.length > 40 ? text.slice(0, 37) + '…' : text;
               s.preview = truncated;
-              // Generate AI title in background
+              // Generate AI title + persist to Vertex AI session
               fetch('/api/sessions', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userMessage: text }),
+                body: JSON.stringify({ sessionId: s.id, userMessage: text }),
               })
                 .then(r => r.json())
                 .then(d => { if (d.title) { setTitleCache(s.id, d.title); s.preview = d.title; } })
                 .catch(() => {});
             }
           }
-        } catch { /* ignore individual failures */ }
+        } catch { /* ignore */ }
       }
       // Re-render with previews
       setSessionList([...sessions]);
     } catch {
       // silently ignore
+    } finally {
+      setIsLoadingHistory(false);
     }
   }, []);
 
@@ -566,7 +573,13 @@ function AssistantWidgetInner() {
               <button className="genie-history__close" onClick={() => setShowHistory(false)} aria-label="Fermer l'historique">✕</button>
             </div>
             <div className="genie-history__list">
-              {sessionList.length === 0 ? (
+              {isLoadingHistory ? (
+                <div className="genie-history__loading">
+                  {/* @ts-expect-error Fluid DS v6 types */}
+                  <NJSpinner size="small" />
+                  <span>Chargement…</span>
+                </div>
+              ) : sessionList.length === 0 ? (
                 <p className="genie-history__empty">Aucune conversation enregistrée</p>
               ) : (
                 sessionList.map(s => (
