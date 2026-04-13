@@ -43,6 +43,16 @@ catalogs:
 importers:
 
   .:
+    dependencies:
+      '@trpc/server':
+        specifier: 'catalog:'
+        version: 11.16.0(typescript@5.9.3)
+      superjson:
+        specifier: ^2.2.6
+        version: 2.2.6
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
     devDependencies:
       plop:
         specifier: ^4.0.0
