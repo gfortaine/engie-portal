@@ -1,6 +1,7 @@
 {
   "name": "engie-portal",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.11.0",
   "engines": {
     "node": ">=22.0.0",
