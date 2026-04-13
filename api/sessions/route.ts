@@ -4,6 +4,7 @@
  * POST   — Create new session { userId }
  * GET    — List sessions (query: ?userId=xxx) or get session history (?sessionId=xxx)
  * DELETE — Delete session { sessionId }
+ * PATCH  — Generate a short title for a session { sessionId, userMessage }
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
@@ -13,6 +14,8 @@ import {
   listSessions,
   deleteSession,
 } from '../lib/vertex-sessions.js';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { generateText } from 'ai';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -50,6 +53,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
       await deleteSession(sessionId);
       return res.json({ deleted: true });
+    }
+
+    if (req.method === 'PATCH') {
+      const { userMessage } = req.body as { userMessage: string };
+      if (!userMessage) return res.status(400).json({ error: 'userMessage required' });
+
+      const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      if (!apiKey) {
+        // Fallback: truncate first message
+        const title = userMessage.length > 30 ? userMessage.slice(0, 27) + '…' : userMessage;
+        return res.json({ title });
+      }
+
+      const google = createGoogleGenerativeAI({ apiKey });
+      const { text: title } = await generateText({
+        model: google('gemini-3.1-flash-lite-preview'),
+        prompt: `Génère un titre court (3-5 mots max, en français) pour cette conversation avec un assistant énergie. Pas de guillemets, pas de ponctuation finale.\n\nMessage: "${userMessage}"`,
+        maxTokens: 20,
+      });
+
+      return res.json({ title: title.trim() });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

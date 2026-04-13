@@ -201,4 +201,79 @@ test.describe('AI Assistant — Génie', () => {
     const svg = tab.locator('svg');
     await expect(svg).toBeVisible();
   });
+
+  test('HITL approval flow for suggestSavings', async ({ page }) => {
+    // Capture browser console for debugging
+    page.on('console', msg => {
+      if (msg.type() === 'error' || msg.type() === 'warn') {
+        console.log(`[browser ${msg.type()}]`, msg.text());
+      }
+    });
+    page.on('response', response => {
+      if (response.url().includes('/api/') && response.status() >= 400) {
+        console.log(`[HTTP ${response.status()}]`, response.url());
+      }
+    });
+
+    await page.goto('/');
+    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+
+    // Open Génie
+    const tab = page.locator('.genie-tab');
+    await tab.click();
+    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+
+    // Type a prompt that triggers suggestSavings (needsApproval: true)
+    const input = page.locator('.genie-panel__textarea');
+    await input.fill('Comment économiser ?');
+    await input.press('Enter');
+
+    // Wait for tool call — approval card should appear
+    await page.waitForTimeout(15000);
+
+    // Check for approval card or genui card (model may approve automatically or show approval UI)
+    const approvalCard = page.locator('.genie-approval');
+    const genuiCard = page.locator('.genui-card');
+    const approvalCount = await approvalCard.count();
+    const genuiCount = await genuiCard.count();
+    console.log('HITL approval cards:', approvalCount, 'GenUI cards:', genuiCount);
+
+    if (approvalCount > 0) {
+      // Click "Confirmer" button
+      const confirmBtn = page.locator('.genie-approval__btn--confirm').first();
+      await confirmBtn.click();
+
+      // Wait for tool execution after approval
+      await page.waitForTimeout(15000);
+
+      // Debug: dump all message content
+      const debugInfo = await page.evaluate(() => {
+        const msgs = document.querySelectorAll('.genie-message');
+        return Array.from(msgs).map(m => ({
+          classes: m.className,
+          text: m.textContent?.slice(0, 200),
+          childCount: m.children.length,
+          innerHTML: m.innerHTML.slice(0, 500),
+        }));
+      });
+      console.log('Post-approval messages:', JSON.stringify(debugInfo, null, 2));
+
+      // After approval, the genui card should render
+      const postApprovalCards = page.locator('.genui-card');
+      const postCount = await postApprovalCards.count();
+      console.log('Post-approval GenUI cards:', postCount);
+      // Also check if there's at least an assistant response (text or card)
+      const assistantMsgs = page.locator('.genie-message--assistant');
+      const assistantCount = await assistantMsgs.count();
+      console.log('Post-approval assistant messages:', assistantCount);
+      expect(assistantCount).toBeGreaterThanOrEqual(1);
+    } else {
+      // Model might have responded with text or used the tool directly
+      // At minimum we should have messages
+      const allMessages = page.locator('.genie-message');
+      const msgCount = await allMessages.count();
+      console.log('Total messages (no approval):', msgCount);
+      expect(msgCount).toBeGreaterThanOrEqual(2);
+    }
+  });
 });

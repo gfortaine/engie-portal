@@ -99,6 +99,20 @@ function GenieIcon({ size = 24, className = '' }: { size?: number; className?: s
 
 const SESSION_STORAGE_KEY = 'genie-session-id';
 const SESSION_HISTORY_KEY = 'genie-sessions';
+const SESSION_TITLES_KEY = 'genie-session-titles';
+
+/** Cached session titles (sessionId → short title) */
+function getTitleCache(): Record<string, string> {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_TITLES_KEY) ?? '{}');
+  } catch { return {}; }
+}
+
+function setTitleCache(sessionId: string, title: string) {
+  const cache = getTitleCache();
+  cache[sessionId] = title;
+  sessionStorage.setItem(SESSION_TITLES_KEY, JSON.stringify(cache));
+}
 
 /** Convert Vertex AI session events to AI SDK UIMessage format */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,26 +191,17 @@ export function AssistantWidget() {
     return response;
   }, []);
 
-  // Dynamic transport with session ID in body + custom fetch
-  const transportRef = useRef(
+  // Single transport using ref-based body — always reads latest sessionId
+  const transport = useRef(
     new DefaultChatTransport({
       api: '/api/chat',
       fetch: wrappedFetch,
       body: () => ({
-        ...(sessionId ? { sessionId } : {}),
+        ...(sessionIdRef.current ? { sessionId: sessionIdRef.current } : {}),
         userId: 'demo-user',
       }),
     }),
-  );
-
-  // Update transport when sessionId or wrappedFetch changes
-  useEffect(() => {
-    transportRef.current = new DefaultChatTransport({
-      api: '/api/chat',
-      fetch: wrappedFetch,
-      body: { ...(sessionId ? { sessionId } : {}), userId: 'demo-user' },
-    });
-  }, [sessionId, wrappedFetch]);
+  ).current;
 
   const {
     messages,
@@ -205,7 +210,16 @@ export function AssistantWidget() {
     status,
     setMessages,
   } = useChat({
-    transport: transportRef.current,
+    transport,
+    // Auto-send after tool approval response (HITL flow)
+    sendAutomaticallyWhen: ({ messages: msgs }) => {
+      const lastMsg = msgs[msgs.length - 1];
+      if (!lastMsg || lastMsg.role !== 'assistant') return false;
+      // Send when all tool parts have been responded to (no pending approvals)
+      return lastMsg.parts.some(
+        (p) => 'state' in p && p.state === 'approval-responded',
+      );
+    },
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
@@ -235,17 +249,58 @@ export function AssistantWidget() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
 
+  // ── Generate session title after first exchange ──
+  const titleGeneratedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      status === 'ready' &&
+      sessionId &&
+      messages.length === 2 &&
+      !isRestoring &&
+      titleGeneratedRef.current !== sessionId
+    ) {
+      // First exchange complete — generate AI title
+      const firstUserText = messages[0]?.parts
+        ?.filter((p: { type: string }) => p.type === 'text')
+        ?.map((p: { type: string; text?: string }) => ('text' in p ? p.text : ''))
+        ?.join(' ') ?? '';
+
+      if (firstUserText) {
+        titleGeneratedRef.current = sessionId;
+        fetch('/api/sessions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userMessage: firstUserText }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.title) {
+              setTitleCache(sessionId, data.title);
+            }
+          })
+          .catch(() => { /* ignore title generation failure */ });
+      }
+    }
+  }, [status, sessionId, messages, isRestoring]);
+
   // ── Load session list for history drawer ──
   const loadSessionList = useCallback(async () => {
     try {
       const res = await fetch('/api/sessions?userId=demo-user');
       if (!res.ok) return;
       const data = await res.json();
+      const titleCache = getTitleCache();
       const sessions = await Promise.all(
         (data.sessions ?? []).map(async (s: { name: string; createTime: string }) => {
           const parts = s.name.split('/');
           const id = parts[parts.length - 1] ?? s.name;
-          // Fetch first event to use as preview/title
+
+          // 1. Check title cache first
+          if (titleCache[id]) {
+            return { id, createTime: s.createTime, preview: titleCache[id] };
+          }
+
+          // 2. Fetch first user event for preview
           let preview = '';
           try {
             const evtRes = await fetch(`/api/sessions?sessionId=${encodeURIComponent(id)}`);
@@ -256,7 +311,16 @@ export function AssistantWidget() {
               );
               if (firstUserEvent) {
                 const text = firstUserEvent.content?.parts?.[0]?.text ?? '';
-                preview = text.length > 50 ? text.slice(0, 47) + '…' : text;
+                // Generate AI title in background
+                fetch('/api/sessions', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userMessage: text }),
+                })
+                  .then(r => r.json())
+                  .then(d => { if (d.title) setTitleCache(id, d.title); })
+                  .catch(() => {});
+                preview = text.length > 40 ? text.slice(0, 37) + '…' : text;
               }
             }
           } catch { /* ignore */ }
@@ -555,6 +619,7 @@ export function AssistantWidget() {
                         state: string;
                         input?: unknown;
                         output?: unknown;
+                        approval?: { id: string; approved?: boolean; reason?: string };
                       };
                       // Extract tool name from type (e.g. "tool-getAlerts" → "getAlerts")
                       const toolName = toolPart.toolName ?? toolPart.type.replace('tool-', '');
@@ -583,13 +648,13 @@ export function AssistantWidget() {
                             <div className="genie-approval__actions">
                               <button
                                 className="genie-approval__btn genie-approval__btn--confirm"
-                                onClick={() => addToolApprovalResponse({ id: toolPart.toolCallId, approved: true })}
+                                onClick={() => addToolApprovalResponse({ id: toolPart.approval?.id ?? toolPart.toolCallId, approved: true })}
                               >
                                 ✓ Confirmer
                               </button>
                               <button
                                 className="genie-approval__btn genie-approval__btn--reject"
-                                onClick={() => addToolApprovalResponse({ id: toolPart.toolCallId, approved: false })}
+                                onClick={() => addToolApprovalResponse({ id: toolPart.approval?.id ?? toolPart.toolCallId, approved: false, reason: 'Refusé par l\'utilisateur' })}
                               >
                                 ✕ Annuler
                               </button>

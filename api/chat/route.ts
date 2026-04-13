@@ -238,8 +238,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // ── Handle approved tool calls (HITL flow) ────────────────────────
+    // When client sends approval-responded parts, execute the tool
+    // and inject tool results before calling streamText
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const processedMessages = [...messages] as any[];
+    const lastAssistantIdx = processedMessages.findLastIndex(
+      (m: { role: string }) => m.role === 'assistant',
+    );
+
+    if (lastAssistantIdx >= 0) {
+      const assistantMsg = processedMessages[lastAssistantIdx];
+      const approvedToolParts = (assistantMsg.parts ?? []).filter(
+        (p: { state?: string; approval?: { approved?: boolean } }) =>
+          p.state === 'approval-responded' && p.approval?.approved === true,
+      );
+
+      if (approvedToolParts.length > 0) {
+        // Execute approved tools and build tool result parts
+        for (const part of approvedToolParts) {
+          const toolName = part.toolName ?? part.type?.replace('tool-', '');
+          const toolDef = tools[toolName as keyof typeof tools];
+          if (toolDef) {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const result = await (toolDef as any).execute(part.input ?? {});
+              // Update the part state to output-available
+              part.state = 'output-available';
+              part.output = result;
+              delete part.approval;
+            } catch (e) {
+              console.warn(`[chat] Tool execution failed for ${toolName}:`, e);
+              part.state = 'output-error';
+              part.errorText = e instanceof Error ? e.message : 'Tool execution failed';
+            }
+          }
+        }
+      }
+    }
+
     // Convert v6 UIMessages (parts array) to CoreMessages (content string) for streamText
-    const modelMessages = await convertToModelMessages(messages);
+    const modelMessages = await convertToModelMessages(processedMessages);
 
     const result = streamText({
       model,
