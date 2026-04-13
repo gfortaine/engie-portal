@@ -1,13 +1,9 @@
-.card {
-  background: white;
-  border-radius: 8px;
-  border: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
+/* Card — Fluid DS handles default card. Only custom error style needed. */
 
-.error {
-  border-color: #e74c3c;
-  background: #fdf2f2;
-  padding: 1rem;
-  color: #c0392b;
+.errorCard {
+  border: 1px solid var(--nj-core-color-red-500);
+  background: var(--nj-core-color-red-50, #fdf2f2);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: var(--nj-core-color-red-700, #c0392b);
 }

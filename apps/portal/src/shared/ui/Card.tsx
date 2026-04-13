@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { NJCard, NJCardBody } from '@engie-group/fluid-design-system-react';
 import styles from './Card.module.css';
 
 interface CardProps {
@@ -8,9 +9,17 @@ interface CardProps {
 }
 
 export function Card({ children, className, variant = 'default' }: CardProps) {
+  if (variant === 'error') {
+    return (
+      <div className={`${styles.errorCard} ${className ?? ''}`}>
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <div className={`${styles.card} ${styles[variant]} ${className ?? ''}`}>
-      {children}
-    </div>
+    <NJCard className={className}>
+      <NJCardBody>{children}</NJCardBody>
+    </NJCard>
   );
 }

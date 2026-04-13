@@ -7,10 +7,11 @@
 .body {
   display: flex;
   flex: 1;
+  min-height: 0;
 }
 
 .main {
   flex: 1;
   overflow-y: auto;
-  background: var(--nj-semantic-color-background-primary, #f5f5f5);
+  background: var(--nj-core-color-grey-100, #f5f5f5);
 }

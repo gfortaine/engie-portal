@@ -1,20 +1,10 @@
-.widget {
-  padding: 1.5rem;
-}
-
-.title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
+/* ContractOverviewWidget — layout styles (Fluid DS handles visual tokens) */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
+  margin: 1rem 0;
 }
 
 .stat {
@@ -25,59 +15,41 @@
 }
 
 .statValue {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--nj-semantic-color-brand-primary, #009b4d);
-}
-
-.statLabel {
-  font-size: 0.75rem;
-  color: var(--nj-semantic-color-text-secondary, #666);
-  text-align: center;
+  color: var(--nj-core-color-blue-600, #007acd);
+  font-variant-numeric: tabular-nums;
 }
 
 .list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .contractRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
-  transition: background-color 0.15s;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--nj-core-color-grey-200, #e0e0e0);
+  transition: background-color 0.15s var(--nj-semantic-motion-easing-fast-out-slow-in);
 }
 
 .contractRow:hover {
-  background: var(--nj-semantic-color-background-secondary, #fafafa);
+  background: var(--nj-core-color-grey-50, #fafafa);
 }
 
 .contractInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-}
-
-.contractRef {
-  font-weight: 600;
-  font-size: 0.9375rem;
-}
-
-.contractAddr {
-  font-size: 0.8125rem;
-  color: var(--nj-semantic-color-text-secondary, #666);
+  gap: 0.125rem;
 }
 
 .contractMeta {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.typeIcon {
-  font-size: 1.25rem;
 }

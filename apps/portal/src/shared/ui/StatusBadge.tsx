@@ -1,11 +1,11 @@
-import styles from './StatusBadge.module.css';
+import { NJBadge } from '@engie-group/fluid-design-system-react';
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  active: { label: 'Actif', className: styles.active ?? '' },
-  pending: { label: 'En attente', className: styles.pending ?? '' },
-  terminated: { label: 'Résilié', className: styles.terminated ?? '' },
-  paid: { label: 'Payée', className: styles.paid ?? '' },
-  overdue: { label: 'En retard', className: styles.overdue ?? '' },
+const STATUS_CONFIG: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' | 'information' }> = {
+  active: { label: 'Actif', variant: 'success' },
+  pending: { label: 'En attente', variant: 'warning' },
+  terminated: { label: 'Résilié', variant: 'neutral' },
+  paid: { label: 'Payée', variant: 'success' },
+  overdue: { label: 'En retard', variant: 'danger' },
 };
 
 interface StatusBadgeProps {
@@ -13,11 +13,11 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const config = STATUS_CONFIG[status] ?? { label: status, className: '' };
+  const config = STATUS_CONFIG[status] ?? { label: status, variant: 'neutral' as const };
 
   return (
-    <span className={`${styles.badge} ${config.className}`}>
+    <NJBadge variant={config.variant} emphasis="subtle">
       {config.label}
-    </span>
+    </NJBadge>
   );
 }

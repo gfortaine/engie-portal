@@ -1,3 +1,5 @@
+/* DashboardPage — layout */
+
 .dashboard {
   padding: 2rem;
   max-width: 1400px;
@@ -7,18 +9,6 @@
 
 .welcomeHeader {
   margin-bottom: 2rem;
-}
-
-.welcomeTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--nj-semantic-color-text-primary, #1a1a1a);
-}
-
-.welcomeSubtitle {
-  font-size: 1rem;
-  color: var(--nj-semantic-color-text-secondary, #666);
-  margin-top: 0.5rem;
 }
 
 .grid {

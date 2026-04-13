@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useAppAuth } from '@/features/auth';
-import { Card } from '@/shared/ui/Card';
+import { NJCard, NJCardBody, NJDisplay, NJHeading, NJText, NJDivider } from '@engie-group/fluid-design-system-react';
 import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
@@ -9,42 +9,47 @@ export function ProfilePage() {
 
   return (
     <div className={styles.page}>
-      <h1>{t('profile.title')}</h1>
+      <NJDisplay scale="xs" as="h1">{t('profile.title')}</NJDisplay>
 
-      <Card className={styles.profileCard}>
-        <div className={styles.avatar}>
-          {user?.name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')}
-        </div>
-        <div className={styles.info}>
-          <div className={styles.field}>
-            <label>{t('profile.name')}</label>
-            <p>{user?.name}</p>
+      <NJCard className={styles.profileCard}>
+        <NJCardBody>
+          <div className={styles.profileHeader}>
+            <div className={styles.avatar}>
+              {user?.name
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
+            </div>
+            <div>
+              <NJHeading scale="sm">{user?.name}</NJHeading>
+              <NJText variant="secondary">{user?.email}</NJText>
+            </div>
           </div>
-          <div className={styles.field}>
-            <label>{t('profile.email')}</label>
-            <p>{user?.email}</p>
-          </div>
-          <div className={styles.field}>
-            <label>{t('profile.tenant')}</label>
-            <p>{user?.tenantId}</p>
-          </div>
-          <div className={styles.field}>
-            <label>{t('profile.roles')}</label>
-            <p>{user?.roles.join(', ')}</p>
-          </div>
-        </div>
-      </Card>
 
-      <Card className={styles.preferencesCard}>
-        <h2>{t('profile.preferences')}</h2>
-        <div className={styles.field}>
-          <label>{t('profile.language')}</label>
-          <LanguageSelector />
-        </div>
-      </Card>
+          <NJDivider />
+
+          <div className={styles.info}>
+            <div className={styles.field}>
+              <NJText scale="xs" variant="secondary">{t('profile.tenant')}</NJText>
+              <NJText>{user?.tenantId}</NJText>
+            </div>
+            <div className={styles.field}>
+              <NJText scale="xs" variant="secondary">{t('profile.roles')}</NJText>
+              <NJText>{user?.roles.join(', ')}</NJText>
+            </div>
+          </div>
+        </NJCardBody>
+      </NJCard>
+
+      <NJCard>
+        <NJCardBody>
+          <NJHeading scale="xs">{t('profile.preferences')}</NJHeading>
+          <div className={styles.field} style={{ marginTop: '1rem' }}>
+            <NJText scale="xs" variant="secondary">{t('profile.language')}</NJText>
+            <LanguageSelector />
+          </div>
+        </NJCardBody>
+      </NJCard>
     </div>
   );
 }

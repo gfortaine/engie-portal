@@ -1,3 +1,5 @@
+/* ConsumptionPage — layout */
+
 .page {
   padding: 2rem;
   max-width: 1200px;
@@ -5,22 +7,18 @@
   width: 100%;
 }
 
-.page h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
-
 .controls {
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .periodSelect {
   padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
+  border-radius: 8px;
+  border: 1px solid var(--nj-core-color-grey-300);
   font-size: 1rem;
   background: white;
+  font-family: var(--nj-semantic-font-family-sans-serif);
+  color: var(--nj-core-color-grey-800);
 }
 
 .content {
@@ -29,47 +27,29 @@
   gap: 1.5rem;
 }
 
-.summaryCard {
-  padding: 2rem;
-}
-
 .totalConsumption {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-}
-
-.totalLabel {
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--nj-semantic-color-text-secondary, #666);
+  padding: 1rem 0;
 }
 
 .totalValue {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--nj-semantic-color-brand-primary, #009b4d);
+  color: var(--nj-core-color-blue-600, #007acd);
+  font-variant-numeric: tabular-nums;
 }
 
 .changeUp {
-  color: #e74c3c;
+  color: var(--nj-core-color-red-600, #d32f2f);
   font-weight: 600;
 }
 
 .changeDown {
-  color: var(--nj-semantic-color-brand-primary, #009b4d);
+  color: var(--nj-core-color-green-600, #008836);
   font-weight: 600;
-}
-
-.chartCard {
-  padding: 1.5rem;
-}
-
-.chartCard h3 {
-  font-size: 1rem;
-  margin-bottom: 1rem;
 }
 
 .chart {
@@ -92,14 +72,19 @@
 .barFill {
   width: 100%;
   max-width: 24px;
-  background: var(--nj-semantic-color-brand-primary, #009b4d);
+  background: var(--nj-core-color-blue-500, #007acd);
   border-radius: 3px 3px 0 0;
   min-height: 2px;
-  transition: height 0.3s ease;
+  transition: height 0.3s ease, opacity 0.15s;
+  opacity: 0.7;
+}
+
+.barFill:hover {
+  opacity: 1;
 }
 
 .barLabel {
   font-size: 0.625rem;
-  color: var(--nj-semantic-color-text-secondary, #666);
+  color: var(--nj-core-color-grey-500);
   margin-top: 4px;
 }

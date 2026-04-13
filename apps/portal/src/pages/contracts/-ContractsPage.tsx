@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useGetContractsQuery } from '@/entities/contract';
-import { Card } from '@/shared/ui/Card';
+import { NJCard, NJCardBody, NJDisplay, NJHeading, NJText, NJIcon, NJInlineMessage } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './ContractsPage.module.css';
@@ -12,7 +12,7 @@ export function ContractsPage() {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <h1>{t('contracts.title')}</h1>
+        <NJDisplay scale="xs" as="h1">{t('contracts.title')}</NJDisplay>
         <div className={styles.list}>
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} height={120} />
@@ -25,48 +25,51 @@ export function ContractsPage() {
   if (error) {
     return (
       <div className={styles.page}>
-        <h1>{t('contracts.title')}</h1>
-        <Card variant="error">
-          <p>{t('errors.loadFailed')}</p>
-        </Card>
+        <NJDisplay scale="xs" as="h1">{t('contracts.title')}</NJDisplay>
+        <NJInlineMessage variant="danger">
+          {t('errors.loadFailed')}
+        </NJInlineMessage>
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <h1>{t('contracts.title')}</h1>
+      <NJDisplay scale="xs" as="h1">{t('contracts.title')}</NJDisplay>
       <div className={styles.list}>
         {contracts?.map((contract) => (
-          <Card key={contract.id} className={styles.contractCard}>
-            <div className={styles.cardHeader}>
-              <div>
-                <h3 className={styles.reference}>{contract.reference}</h3>
-                <p className={styles.address}>{contract.address}</p>
+          <NJCard key={contract.id}>
+            <NJCardBody>
+              <div className={styles.cardHeader}>
+                <div>
+                  <NJHeading scale="xs">{contract.reference}</NJHeading>
+                  <NJText scale="sm" variant="secondary">{contract.address}</NJText>
+                </div>
+                <StatusBadge status={contract.status} />
               </div>
-              <StatusBadge status={contract.status} />
-            </div>
-            <div className={styles.cardDetails}>
-              <div className={styles.detail}>
-                <span className={styles.detailLabel}>{t('contracts.type')}</span>
-                <span className={styles.detailValue}>
-                  {t(`contracts.types.${contract.type}`)}
-                </span>
+              <div className={styles.cardDetails}>
+                <div className={styles.detail}>
+                  <NJText scale="xs" variant="secondary">{t('contracts.type')}</NJText>
+                  <div className={styles.detailValueRow}>
+                    <NJIcon name={contract.type === 'electricity' ? 'bolt' : contract.type === 'gas' ? 'local_fire_department' : 'wb_sunny'} />
+                    <NJText>{t(`contracts.types.${contract.type}`)}</NJText>
+                  </div>
+                </div>
+                <div className={styles.detail}>
+                  <NJText scale="xs" variant="secondary">{t('contracts.meter')}</NJText>
+                  <NJText>{contract.meterNumber}</NJText>
+                </div>
+                <div className={styles.detail}>
+                  <NJText scale="xs" variant="secondary">{t('contracts.monthlyAmount')}</NJText>
+                  <NJText>
+                    <strong>
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(contract.monthlyAmount)}
+                    </strong>
+                  </NJText>
+                </div>
               </div>
-              <div className={styles.detail}>
-                <span className={styles.detailLabel}>{t('contracts.meter')}</span>
-                <span className={styles.detailValue}>{contract.meterNumber}</span>
-              </div>
-              <div className={styles.detail}>
-                <span className={styles.detailLabel}>{t('contracts.monthlyAmount')}</span>
-                <span className={styles.detailValue}>
-                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                    contract.monthlyAmount,
-                  )}
-                </span>
-              </div>
-            </div>
-          </Card>
+            </NJCardBody>
+          </NJCard>
         ))}
       </div>
     </div>

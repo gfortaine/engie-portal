@@ -1,3 +1,5 @@
+/* InvoicesPage — layout + table styling */
+
 .page {
   padding: 2rem;
   max-width: 1200px;
@@ -5,22 +7,19 @@
   width: 100%;
 }
 
-.page h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
-
 .list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 1.5rem;
 }
 
 .tableWrapper {
   overflow-x: auto;
   border-radius: 8px;
-  border: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
+  border: 1px solid var(--nj-core-color-grey-200);
+  background: white;
+  margin-top: 1.5rem;
 }
 
 .table {
@@ -34,14 +33,15 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--nj-semantic-color-text-secondary, #666);
-  background: var(--nj-semantic-color-background-secondary, #fafafa);
-  border-bottom: 2px solid var(--nj-semantic-color-border-default, #e0e0e0);
+  color: var(--nj-core-color-grey-600);
+  background: var(--nj-core-color-grey-50);
+  border-bottom: 2px solid var(--nj-core-color-grey-200);
+  font-family: var(--nj-semantic-font-family-sans-serif);
 }
 
 .table td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--nj-semantic-color-border-default, #e0e0e0);
+  border-bottom: 1px solid var(--nj-core-color-grey-100);
   vertical-align: middle;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .table tbody tr:hover {
-  background: var(--nj-semantic-color-background-secondary, #fafafa);
+  background: var(--nj-core-color-grey-50);
 }
 
 .reference {
@@ -60,20 +60,5 @@
 .amount {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-.downloadBtn {
-  background: none;
-  border: 1px solid var(--nj-semantic-color-brand-primary, #009b4d);
-  color: var(--nj-semantic-color-brand-primary, #009b4d);
-  padding: 0.375rem 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.15s;
-}
-
-.downloadBtn:hover {
-  background: var(--nj-semantic-color-brand-primary, #009b4d);
-  color: white;
+  color: var(--nj-core-color-ultramarine-800, #182663);
 }

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useGetContractsQuery } from '@/entities/contract';
-import { Card } from '@/shared/ui/Card';
+import { NJCard, NJCardBody, NJHeading, NJText, NJDivider, NJIcon } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './ContractOverviewWidget.module.css';
@@ -11,59 +11,63 @@ export function ContractOverviewWidget() {
 
   if (isLoading) {
     return (
-      <Card className={styles.widget}>
-        <h2 className={styles.title}>{t('dashboard.contractOverview')}</h2>
-        <div className={styles.list}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} height={72} />
-          ))}
-        </div>
-      </Card>
+      <NJCard>
+        <NJCardBody>
+          <NJHeading scale="sm">{t('dashboard.contractOverview')}</NJHeading>
+          <div className={styles.list}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} height={72} />
+            ))}
+          </div>
+        </NJCardBody>
+      </NJCard>
     );
   }
 
+  const activeCount = contracts?.filter((c) => c.status === 'active').length ?? 0;
+  const monthlyTotal = contracts
+    ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+        contracts.reduce((sum, c) => sum + c.monthlyAmount, 0),
+      )
+    : '—';
+
   return (
-    <Card className={styles.widget}>
-      <h2 className={styles.title}>{t('dashboard.contractOverview')}</h2>
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>{contracts?.length ?? 0}</span>
-          <span className={styles.statLabel}>{t('dashboard.totalContracts')}</span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>
-            {contracts?.filter((c) => c.status === 'active').length ?? 0}
-          </span>
-          <span className={styles.statLabel}>{t('dashboard.activeContracts')}</span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>
-            {contracts
-              ? new Intl.NumberFormat('fr-FR', {
-                  style: 'currency',
-                  currency: 'EUR',
-                }).format(contracts.reduce((sum, c) => sum + c.monthlyAmount, 0))
-              : '—'}
-          </span>
-          <span className={styles.statLabel}>{t('dashboard.monthlyTotal')}</span>
-        </div>
-      </div>
-      <div className={styles.list}>
-        {contracts?.map((contract) => (
-          <div key={contract.id} className={styles.contractRow}>
-            <div className={styles.contractInfo}>
-              <span className={styles.contractRef}>{contract.reference}</span>
-              <span className={styles.contractAddr}>{contract.address}</span>
-            </div>
-            <div className={styles.contractMeta}>
-              <span className={styles.typeIcon}>
-                {contract.type === 'electricity' ? '⚡' : contract.type === 'gas' ? '🔥' : '☀️'}
-              </span>
-              <StatusBadge status={contract.status} />
-            </div>
+    <NJCard>
+      <NJCardBody>
+        <NJHeading scale="sm">{t('dashboard.contractOverview')}</NJHeading>
+
+        <div className={styles.stats}>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{contracts?.length ?? 0}</span>
+            <NJText scale="xs" variant="secondary">{t('dashboard.totalContracts')}</NJText>
           </div>
-        ))}
-      </div>
-    </Card>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{activeCount}</span>
+            <NJText scale="xs" variant="secondary">{t('dashboard.activeContracts')}</NJText>
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{monthlyTotal}</span>
+            <NJText scale="xs" variant="secondary">{t('dashboard.monthlyTotal')}</NJText>
+          </div>
+        </div>
+
+        <NJDivider />
+
+        <div className={styles.list}>
+          {contracts?.map((contract) => (
+            <div key={contract.id} className={styles.contractRow}>
+              <div className={styles.contractInfo}>
+                <NJText scale="md"><strong>{contract.reference}</strong></NJText>
+                <NJText scale="sm" variant="secondary">{contract.address}</NJText>
+              </div>
+              <div className={styles.contractMeta}>
+                <NJIcon name={contract.type === 'electricity' ? 'bolt' : contract.type === 'gas' ? 'local_fire_department' : 'wb_sunny'} />
+                <StatusBadge status={contract.status} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </NJCardBody>
+    </NJCard>
   );
 }

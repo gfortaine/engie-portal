@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetConsumptionQuery } from '@/entities/meter';
-import { Card } from '@/shared/ui/Card';
+import { NJCard, NJCardBody, NJDisplay, NJHeading, NJText, NJSelectRoot } from '@engie-group/fluid-design-system-react';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './ConsumptionPage.module.css';
 
@@ -18,7 +18,7 @@ export function ConsumptionPage() {
 
   return (
     <div className={styles.page}>
-      <h1>{t('consumption.title')}</h1>
+      <NJDisplay scale="xs" as="h1">{t('consumption.title')}</NJDisplay>
 
       <div className={styles.controls}>
         <select
@@ -41,47 +41,51 @@ export function ConsumptionPage() {
         <Skeleton height={400} />
       ) : data ? (
         <div className={styles.content}>
-          <Card className={styles.summaryCard}>
-            <div className={styles.totalConsumption}>
-              <span className={styles.totalLabel}>{t('consumption.total')}</span>
-              <span className={styles.totalValue}>
-                {data.total.toLocaleString('fr-FR')} {data.unit}
-              </span>
-              {data.comparisonPeriod && (
-                <span
-                  className={
-                    data.comparisonPeriod.percentChange > 0
-                      ? styles.changeUp
-                      : styles.changeDown
-                  }
-                >
-                  {data.comparisonPeriod.percentChange > 0 ? '↑' : '↓'}{' '}
-                  {Math.abs(data.comparisonPeriod.percentChange)}%{' '}
-                  {t('consumption.vsPreviousPeriod')}
+          <NJCard>
+            <NJCardBody>
+              <div className={styles.totalConsumption}>
+                <NJText scale="sm" variant="secondary">{t('consumption.total')}</NJText>
+                <span className={styles.totalValue}>
+                  {data.total.toLocaleString('fr-FR')} {data.unit}
                 </span>
-              )}
-            </div>
-          </Card>
-
-          <Card className={styles.chartCard}>
-            <h3>{t('consumption.dailyBreakdown')}</h3>
-            <div className={styles.chart}>
-              {data.points.map((point, i) => (
-                <div key={i} className={styles.bar}>
-                  <div
-                    className={styles.barFill}
-                    style={{
-                      height: `${(point.value / Math.max(...data.points.map((p) => p.value))) * 100}%`,
-                    }}
-                    title={`${point.date}: ${point.value} ${data.unit}`}
-                  />
-                  <span className={styles.barLabel}>
-                    {new Date(point.date).getDate()}
+                {data.comparisonPeriod && (
+                  <span
+                    className={
+                      data.comparisonPeriod.percentChange > 0
+                        ? styles.changeUp
+                        : styles.changeDown
+                    }
+                  >
+                    {data.comparisonPeriod.percentChange > 0 ? '↑' : '↓'}{' '}
+                    {Math.abs(data.comparisonPeriod.percentChange)}%{' '}
+                    {t('consumption.vsPreviousPeriod')}
                   </span>
-                </div>
-              ))}
-            </div>
-          </Card>
+                )}
+              </div>
+            </NJCardBody>
+          </NJCard>
+
+          <NJCard>
+            <NJCardBody>
+              <NJHeading scale="xs">{t('consumption.dailyBreakdown')}</NJHeading>
+              <div className={styles.chart}>
+                {data.points.map((point, i) => (
+                  <div key={i} className={styles.bar}>
+                    <div
+                      className={styles.barFill}
+                      style={{
+                        height: `${(point.value / Math.max(...data.points.map((p) => p.value))) * 100}%`,
+                      }}
+                      title={`${point.date}: ${point.value} ${data.unit}`}
+                    />
+                    <span className={styles.barLabel}>
+                      {new Date(point.date).getDate()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </NJCardBody>
+          </NJCard>
         </div>
       ) : null}
     </div>

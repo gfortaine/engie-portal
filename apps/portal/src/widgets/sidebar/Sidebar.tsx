@@ -1,13 +1,19 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import styles from './Sidebar.module.css';
+import {
+  NJSidebarRoot,
+  NJSidebarGroup,
+  NJSidebarItem,
+  NJSidebarSpacer,
+} from '@engie-group/fluid-design-system-react';
+import { NJText } from '@engie-group/fluid-design-system-react';
 
 const NAV_ITEMS = [
-  { path: '/' as const, icon: '🏠', labelKey: 'nav.dashboard' },
-  { path: '/contracts' as const, icon: '📋', labelKey: 'nav.contracts' },
-  { path: '/invoices' as const, icon: '💶', labelKey: 'nav.invoices' },
-  { path: '/consumption' as const, icon: '⚡', labelKey: 'nav.consumption' },
-  { path: '/profile' as const, icon: '👤', labelKey: 'nav.profile' },
+  { path: '/' as const, icon: 'dashboard', labelKey: 'nav.dashboard' },
+  { path: '/contracts' as const, icon: 'description', labelKey: 'nav.contracts' },
+  { path: '/invoices' as const, icon: 'receipt_long', labelKey: 'nav.invoices' },
+  { path: '/consumption' as const, icon: 'bolt', labelKey: 'nav.consumption' },
+  { path: '/profile' as const, icon: 'person', labelKey: 'nav.profile' },
 ];
 
 export function Sidebar() {
@@ -15,28 +21,33 @@ export function Sidebar() {
   const matchRoute = useMatchRoute();
 
   return (
-    <nav className={styles.sidebar}>
-      <ul className={styles.navList}>
+    <NJSidebarRoot>
+      <NJSidebarGroup aria-label="Main navigation">
         {NAV_ITEMS.map((item) => {
-          const isActive = matchRoute({ to: item.path, fuzzy: item.path !== '/' });
+          const isActive = Boolean(matchRoute({ to: item.path, fuzzy: item.path !== '/' }));
           return (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-              >
-                <span className={styles.icon}>{item.icon}</span>
-                <span className={styles.label}>{t(item.labelKey)}</span>
+            <NJSidebarItem
+              key={item.path}
+              leadingIcon={item.icon}
+              selected={isActive}
+              asChild
+            >
+              <Link to={item.path}>
+                {t(item.labelKey)}
               </Link>
-            </li>
+            </NJSidebarItem>
           );
         })}
-      </ul>
+      </NJSidebarGroup>
 
-      <div className={styles.footer}>
-        <p className={styles.version}>ENGIE Portal v0.1.0</p>
-        <p className={styles.stack}>React 19 · RTK · tRPC · FSD</p>
-      </div>
-    </nav>
+      <NJSidebarSpacer />
+
+      <NJSidebarGroup aria-label="Footer">
+        <div style={{ padding: '0.75rem 1rem' }}>
+          <NJText scale="xs" variant="secondary">ENGIE Portal v0.1.0</NJText>
+          <NJText scale="xs" variant="tertiary">React 19 · RTK · tRPC · FSD</NJText>
+        </div>
+      </NJSidebarGroup>
+    </NJSidebarRoot>
   );
 }

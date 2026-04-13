@@ -1,3 +1,6 @@
+/* ENGIE Portal — Layout & App-Level Overrides */
+/* Design tokens come from @engie-group/fluid-design-tokens/css */
+
 :root {
   --portal-sidebar-width: 260px;
   --portal-header-height: 64px;
@@ -12,15 +15,17 @@
 }
 
 html {
-  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   min-height: 100vh;
-  background-color: var(--nj-semantic-color-background-primary, #f5f5f5);
-  color: var(--nj-semantic-color-text-primary, #1a1a1a);
+  background-color: var(--nj-core-color-grey-100);
+  color: var(--nj-core-color-grey-900);
+  font-family: var(--nj-semantic-font-family-sans-serif, 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: 1rem;
+  line-height: var(--nj-semantic-font-line-height-sans-serif, 1.5);
 }
 
 #root {
@@ -30,10 +35,44 @@ body {
 }
 
 a {
-  color: var(--nj-semantic-color-brand-primary, #009b4d);
+  color: var(--nj-core-color-blue-600);
   text-decoration: none;
+  transition: color 0.15s var(--nj-semantic-motion-easing-fast-out-slow-in);
 }
 
 a:hover {
+  color: var(--nj-core-color-blue-700);
   text-decoration: underline;
+}
+
+/* Focus-visible for keyboard accessibility */
+:focus-visible {
+  outline: 2px solid var(--nj-core-color-blue-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--nj-core-color-blue-200);
+  color: var(--nj-core-color-grey-900);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nj-core-color-grey-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nj-core-color-grey-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nj-core-color-grey-400);
 }

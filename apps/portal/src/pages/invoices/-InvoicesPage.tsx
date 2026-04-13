@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useGetInvoicesQuery } from '@/entities/invoice';
-import { Card } from '@/shared/ui/Card';
+import { NJDisplay, NJButton, NJInlineMessage } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './InvoicesPage.module.css';
@@ -12,7 +12,7 @@ export function InvoicesPage() {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <h1>{t('invoices.title')}</h1>
+        <NJDisplay scale="xs" as="h1">{t('invoices.title')}</NJDisplay>
         <div className={styles.list}>
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} height={80} />
@@ -25,17 +25,17 @@ export function InvoicesPage() {
   if (error) {
     return (
       <div className={styles.page}>
-        <h1>{t('invoices.title')}</h1>
-        <Card variant="error">
-          <p>{t('errors.loadFailed')}</p>
-        </Card>
+        <NJDisplay scale="xs" as="h1">{t('invoices.title')}</NJDisplay>
+        <NJInlineMessage variant="danger">
+          {t('errors.loadFailed')}
+        </NJInlineMessage>
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      <h1>{t('invoices.title')}</h1>
+      <NJDisplay scale="xs" as="h1">{t('invoices.title')}</NJDisplay>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -66,9 +66,13 @@ export function InvoicesPage() {
                   <StatusBadge status={invoice.status} />
                 </td>
                 <td>
-                  <button className={styles.downloadBtn}>
-                    📄 {t('invoices.download')}
-                  </button>
+                  <NJButton
+                    emphasis="minimal"
+                    variant="secondary"
+                    scale="sm"
+                    icon="download"
+                    label={t('invoices.download')}
+                  />
                 </td>
               </tr>
             ))}

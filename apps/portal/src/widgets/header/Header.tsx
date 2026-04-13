@@ -1,41 +1,70 @@
 import { useTranslation } from 'react-i18next';
+import { NJHeader as FluidHeader, NJBadge, NJButton, NJNavigationAction } from '@engie-group/fluid-design-system-react';
 import { useAppAuth } from '@/features/auth';
 import styles from './Header.module.css';
+
+function EngieLogo() {
+  return (
+    <a href="/" className={styles.logoLink}>
+      <svg viewBox="0 0 140 40" width="140" height="40" aria-label="ENGIE Portal">
+        {/* ENGIE gradient bar */}
+        <defs>
+          <linearGradient id="engie-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#00aaff" />
+            <stop offset="100%" stopColor="#23d2b5" />
+          </linearGradient>
+        </defs>
+        <rect width="140" height="3" rx="1.5" fill="url(#engie-grad)" />
+        <text x="0" y="28" fill="#182663" fontFamily="Lato, sans-serif" fontWeight="900" fontSize="22" letterSpacing="2">
+          ENGIE
+        </text>
+        <text x="90" y="28" fill="#007acd" fontFamily="Lato, sans-serif" fontWeight="400" fontSize="13">
+          Portal
+        </text>
+      </svg>
+    </a>
+  );
+}
 
 export function Header() {
   const { t } = useTranslation();
   const { user, signOut } = useAppAuth();
 
+  const initials = user?.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('') ?? '';
+
   return (
-    <header className={styles.header}>
-      <div className={styles.brand}>
-        <svg className={styles.logo} viewBox="0 0 120 40" width="120" height="40">
-          <rect width="120" height="40" rx="4" fill="#009b4d" />
-          <text x="12" y="27" fill="white" fontFamily="Lato, sans-serif" fontWeight="700" fontSize="18">
-            ENGIE
-          </text>
-          <text x="74" y="27" fill="rgba(255,255,255,0.8)" fontFamily="Lato, sans-serif" fontSize="10">
-            Portal
-          </text>
-        </svg>
-      </div>
-
-      <nav className={styles.nav}>
-        <span className={styles.envBadge}>{t('common.demo')}</span>
-      </nav>
-
-      <div className={styles.userSection}>
-        <div className={styles.userAvatar}>
-          {user?.name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')}
+    <FluidHeader
+      layout="retracted"
+      logo={<EngieLogo />}
+      utility={
+        <NJNavigationAction icon="notifications">
+          {t('common.notifications')}
+        </NJNavigationAction>
+      }
+      avatar={
+        <div className={styles.userSection}>
+          <div className={styles.avatar} title={user?.name}>
+            {initials}
+          </div>
+          <span className={styles.userName}>{user?.name}</span>
         </div>
-        <span className={styles.userName}>{user?.name}</span>
-        <button onClick={signOut} className={styles.logoutBtn}>
-          {t('auth.logout')}
-        </button>
-      </div>
-    </header>
+      }
+      button={
+        <NJButton
+          emphasis="minimal"
+          variant="secondary"
+          icon="logout"
+          label={t('auth.logout')}
+          onClick={signOut}
+        />
+      }
+    >
+      <NJBadge variant="warning" emphasis="subtle">
+        {t('common.demo')}
+      </NJBadge>
+    </FluidHeader>
   );
 }
