@@ -32,6 +32,8 @@
 }
 
 .login-logo {
+  height: 56px;
+  width: auto;
   margin-bottom: 16px;
 }
 

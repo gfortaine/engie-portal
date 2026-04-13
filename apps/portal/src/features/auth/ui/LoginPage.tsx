@@ -38,21 +38,11 @@ export function LoginPage() {
         {/* ENGIE brand gradient ray — #00AAFF → #23D2B5 */}
         <div className="login-gradient-ray" />
 
-        <svg className="login-logo" viewBox="0 0 140 40" width="180" height="52" aria-label="ENGIE">
-          <defs>
-            <linearGradient id="engie-login-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#00aaff" />
-              <stop offset="100%" stopColor="#23d2b5" />
-            </linearGradient>
-          </defs>
-          <rect width="140" height="3" rx="1.5" fill="url(#engie-login-grad)" />
-          <text x="0" y="28" fill="#182663" fontFamily="Lato, sans-serif" fontWeight="900" fontSize="22" letterSpacing="2">
-            ENGIE
-          </text>
-          <text x="90" y="28" fill="#007acd" fontFamily="Lato, sans-serif" fontWeight="400" fontSize="13">
-            Portal
-          </text>
-        </svg>
+        <img
+          src="https://assets.design.digital.engie.com/brand/logo-engie-blue.svg"
+          alt="ENGIE"
+          className="login-logo"
+        />
 
         <h1 className="login-title">Espace Client</h1>
         <p className="login-subtitle">Connectez-vous à votre portail énergie</p>
