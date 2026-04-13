@@ -154,6 +154,7 @@ const tools = {
 
   suggestSavings: tool({
     description: "Propose des recommandations d'économies d'énergie personnalisées basées sur les habitudes de consommation du client.",
+    needsApproval: true,
     inputSchema: z.object({
       contractId: z.string().optional().describe("ID du contrat pour des recommandations ciblées"),
     }),

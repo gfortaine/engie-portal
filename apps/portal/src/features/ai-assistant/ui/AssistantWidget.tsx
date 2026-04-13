@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type FormEvent, type ChangeEvent } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from '@tanstack/react-router';
 import {
   NJButton,
   NJIcon,
@@ -30,12 +31,38 @@ const toolComponentMap: Record<string, React.ComponentType<{ data: any }>> = {
   suggestSavings: SavingsRecommendation,
 };
 
-const SUGGESTED_PROMPTS = [
-  { icon: '📊', text: 'Analyse ma consommation électrique', category: 'consumption' },
-  { icon: '📄', text: 'Explique ma dernière facture', category: 'billing' },
-  { icon: '⚡', text: 'Compare mes contrats', category: 'contracts' },
-  { icon: '🔔', text: 'Quelles sont mes alertes ?', category: 'alerts' },
-  { icon: '💡', text: 'Comment économiser ?', category: 'savings' },
+// ── Context-aware suggestions per route ────────────────────────────
+type SuggestionItem = { icon: string; text: string };
+
+const ROUTE_SUGGESTIONS: Record<string, SuggestionItem[]> = {
+  '/': [
+    { icon: '📊', text: 'Résume mon tableau de bord' },
+    { icon: '🔔', text: 'Quelles sont mes alertes ?' },
+    { icon: '💡', text: 'Comment économiser ?' },
+  ],
+  '/contracts': [
+    { icon: '⚡', text: 'Compare mes contrats' },
+    { icon: '🔍', text: 'Trouve mon contrat électricité' },
+    { icon: '📋', text: 'Détaille mon contrat gaz' },
+  ],
+  '/invoices': [
+    { icon: '📄', text: 'Explique ma dernière facture' },
+    { icon: '💰', text: 'Pourquoi ma facture a augmenté ?' },
+    { icon: '📊', text: 'Historique de mes factures' },
+  ],
+  '/consumption': [
+    { icon: '📊', text: 'Analyse ma consommation électrique' },
+    { icon: '📉', text: 'Tendance de consommation ce mois' },
+    { icon: '💡', text: 'Conseils pour réduire ma conso' },
+  ],
+};
+
+const DEFAULT_SUGGESTIONS: SuggestionItem[] = [
+  { icon: '📊', text: 'Analyse ma consommation électrique' },
+  { icon: '📄', text: 'Explique ma dernière facture' },
+  { icon: '⚡', text: 'Compare mes contrats' },
+  { icon: '🔔', text: 'Quelles sont mes alertes ?' },
+  { icon: '💡', text: 'Comment économiser ?' },
 ];
 
 const chatTransport = new DefaultChatTransport({ api: '/api/chat' });
@@ -74,6 +101,7 @@ function GenieIcon({ size = 24, className = '' }: { size?: number; className?: s
 
 export function AssistantWidget() {
   const { t } = useTranslation();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -82,12 +110,36 @@ export function AssistantWidget() {
   const {
     messages,
     sendMessage,
+    addToolApprovalResponse,
     status,
   } = useChat({
     transport: chatTransport,
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Context-aware suggestions based on current route
+  const currentSuggestions = ROUTE_SUGGESTIONS[location.pathname] ?? DEFAULT_SUGGESTIONS;
+
+  // Cmd+K / Ctrl+K shortcut to toggle sidebar
+  const toggleOpen = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        toggleOpen();
+      }
+      // Escape to close
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, toggleOpen]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -137,7 +189,7 @@ export function AssistantWidget() {
         className={`genie-tab ${isOpen ? 'genie-tab--active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Fermer Génie' : 'Ouvrir Génie'}
-        title="Génie by ENGIE — votre assistant énergie"
+        title="Génie by ENGIE — votre assistant énergie (⌘K)"
       >
         <GenieIcon size={20} />
         <span className="genie-tab__label">Génie</span>
@@ -177,16 +229,28 @@ export function AssistantWidget() {
               </span>
             </div>
           </div>
-          <NJButton
-            // @ts-expect-error Fluid DS v6 types
-            variant="subtle"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            aria-label="Fermer"
-          >
-            {/* @ts-expect-error Fluid DS v6 types */}
-            <NJIcon name="close" size="20" />
-          </NJButton>
+          <div className="genie-panel__header-actions">
+            {messages.length > 0 && (
+              <button
+                className="genie-new-chat"
+                onClick={() => window.location.reload()}
+                title="Nouvelle conversation"
+                aria-label="Nouvelle conversation"
+              >
+                +
+              </button>
+            )}
+            <NJButton
+              // @ts-expect-error Fluid DS v6 types
+              variant="subtle"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              aria-label="Fermer"
+            >
+              {/* @ts-expect-error Fluid DS v6 types */}
+              <NJIcon name="close" size="20" />
+            </NJButton>
+          </div>
         </div>
 
         {/* Messages */}
@@ -202,7 +266,7 @@ export function AssistantWidget() {
                 Posez-moi des questions sur vos contrats, factures ou consommation.
               </p>
               <div className="genie-panel__suggestions">
-                {SUGGESTED_PROMPTS.map((prompt) => (
+                {currentSuggestions.map((prompt) => (
                   <button
                     key={prompt.text}
                     className="genie-suggestion"
@@ -251,6 +315,40 @@ export function AssistantWidget() {
 
                       if (toolPart.state === 'call' || toolPart.state === 'partial-call') {
                         return <ToolSkeleton key={toolPart.toolCallId} toolName={toolPart.toolName} />;
+                      }
+
+                      // Human-in-the-loop: approval requested
+                      if (toolPart.state === 'approval-requested') {
+                        return (
+                          <div key={toolPart.toolCallId} className="genie-approval">
+                            <div className="genie-approval__header">
+                              <span className="genie-approval__icon">🔐</span>
+                              <span>Action nécessitant votre approbation</span>
+                            </div>
+                            <div className="genie-approval__tool">
+                              <strong>{toolPart.toolName === 'suggestSavings' ? 'Optimisation contrat' : toolPart.toolName}</strong>
+                              {toolPart.args != null && (
+                                <pre className="genie-approval__args">
+                                  {JSON.stringify(toolPart.args as Record<string, unknown>, null, 2)}
+                                </pre>
+                              )}
+                            </div>
+                            <div className="genie-approval__actions">
+                              <button
+                                className="genie-approval__btn genie-approval__btn--confirm"
+                                onClick={() => addToolApprovalResponse({ id: toolPart.toolCallId, approved: true })}
+                              >
+                                ✓ Confirmer
+                              </button>
+                              <button
+                                className="genie-approval__btn genie-approval__btn--reject"
+                                onClick={() => addToolApprovalResponse({ id: toolPart.toolCallId, approved: false })}
+                              >
+                                ✕ Annuler
+                              </button>
+                            </div>
+                          </div>
+                        );
                       }
 
                       if (toolPart.state === 'result' && Component) {
