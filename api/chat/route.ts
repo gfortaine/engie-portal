@@ -301,7 +301,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 (r: { toolCallId: string }) => r.toolCallId === tc.toolCallId,
               );
               if (tr) {
-                toolResults.push({ toolName: tc.toolName, result: tr.result });
+                toolResults.push({ toolName: tc.toolName, result: (tr as { output?: unknown }).output });
               }
             }
           }
