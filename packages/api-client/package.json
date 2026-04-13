@@ -10,11 +10,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@trpc/server": "catalog:default",
     "@engie-portal/bff": "workspace:*",
+    "@trpc/server": "catalog:default",
     "zod": "catalog:default"
   },
   "devDependencies": {
+    "@types/node": "^22.19.17",
     "typescript": "catalog:default"
   }
 }

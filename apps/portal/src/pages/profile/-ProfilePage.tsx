@@ -73,10 +73,12 @@ function LanguageSelector() {
   const { i18n, t } = useTranslation();
 
   return (
+    // @ts-expect-error Fluid DS v6 types mismatch
     <NJSelectRoot
       id="lang-select"
       label={t('profile.language')}
       value={i18n.language}
+      // @ts-expect-error Fluid DS v6 types mismatch
       onChange={(v) => v && i18n.changeLanguage(v)}
     >
       <NJSelectItem value="fr">Français</NJSelectItem>

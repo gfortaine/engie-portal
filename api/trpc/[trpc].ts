@@ -41,22 +41,31 @@ function trpcResult(data: unknown) {
   return { result: { data: { json: data, meta: { values: {} } } } };
 }
 
+function safeJsonParse(raw: unknown, fallback: unknown): unknown {
+  if (typeof raw !== 'string') return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
 // ── Route handler ─────────────────────────────────────────────────
 type Handler = (req: VercelRequest) => unknown;
 
 const routes: Record<string, Handler> = {
   'contract.list': () => mockContracts,
   'contract.getById': (req) => {
-    const input = JSON.parse((req.query['input'] as string) || '""');
+    const input = safeJsonParse(req.query['input'], '');
     return mockContracts.find((c) => c.id === input) ?? null;
   },
   'invoice.list': () => mockInvoices,
   'invoice.getById': (req) => {
-    const input = JSON.parse((req.query['input'] as string) || '""');
+    const input = safeJsonParse(req.query['input'], '');
     return mockInvoices.find((i) => i.id === input) ?? null;
   },
   'consumption.getData': (req) => {
-    const input = JSON.parse((req.query['input'] as string) || '{}');
+    const input = safeJsonParse(req.query['input'], {}) as Record<string, string>;
     return generateConsumptionData(input.contractId ?? 'ctr_001', input.period ?? '2026-03');
   },
 };

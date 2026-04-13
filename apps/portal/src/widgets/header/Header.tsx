@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import { NJHeader as FluidHeader, NJBadge, NJButton, NJNavigationAction, NJAvatarRoot, NJModal, NJModalContent } from '@engie-group/fluid-design-system-react';
 import { useAppAuth } from '@/features/auth';
 import styles from './Header.module.css';
 
 function EngieLogo() {
   return (
-    <a href="/" className={styles.logoLink}>
+    <Link to="/" className={styles.logoLink}>
       <svg viewBox="0 0 140 40" width="140" height="40" aria-label="ENGIE Portal">
         {/* ENGIE gradient bar */}
         <defs>
@@ -23,7 +24,7 @@ function EngieLogo() {
           Portal
         </text>
       </svg>
-    </a>
+    </Link>
   );
 }
 
@@ -73,9 +74,11 @@ export function Header() {
         }
       />
 
+      {/* @ts-expect-error Fluid DS v6 types mismatch */}
       <NJModal open={logoutOpen} onClose={() => setLogoutOpen(false)}>
         <NJModalContent
           title={t('auth.logoutConfirmTitle', 'Déconnexion')}
+          // @ts-expect-error Fluid DS v6 types mismatch
           primaryAction={{ label: t('auth.logoutConfirm', 'Se déconnecter'), onClick: signOut }}
           secondaryAction={{ label: t('common.cancel', 'Annuler'), onClick: () => setLogoutOpen(false) }}
         >

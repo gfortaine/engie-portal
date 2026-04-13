@@ -33,11 +33,13 @@ describe('authSlice', () => {
 
   it('should select current user', () => {
     const rootState = { auth: authSlice.reducer(undefined, setUser(mockUser)) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(selectCurrentUser(rootState as any)).toEqual(mockUser);
   });
 
   it('should select auth status', () => {
     const rootState = { auth: authSlice.reducer(undefined, setUser(mockUser)) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(selectAuthStatus(rootState as any)).toBe('authenticated');
   });
 });

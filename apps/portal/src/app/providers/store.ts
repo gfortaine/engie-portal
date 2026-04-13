@@ -8,6 +8,7 @@ const rootReducer = combineSlices(authSlice, rtkApi);
 
 export type LazyState = object;
 declare module '@reduxjs/toolkit' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface LazyLoadedSlicesState extends LazyState {}
 }
 

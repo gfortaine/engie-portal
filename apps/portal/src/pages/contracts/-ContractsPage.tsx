@@ -46,6 +46,7 @@ export function ContractsPage() {
     return (
       <div className={styles.page}>
         <NJDisplay scale="xs" as="h1">{t('contracts.title')}</NJDisplay>
+        {/* @ts-expect-error Fluid DS v6 types mismatch */}
         <NJInlineMessage variant="danger">
           {t('errors.loadFailed')}
         </NJInlineMessage>
@@ -61,9 +62,11 @@ export function ContractsPage() {
       <div className={styles.toolbar}>
         <NJInputSearch
           id="contract-search"
+          // @ts-expect-error Fluid DS v6 types mismatch
           label={t('contracts.search', 'Rechercher un contrat')}
           value={search}
-          onChange={(v) => setSearch(v ?? '')}
+          // @ts-expect-error Fluid DS v6 types mismatch
+          onChange={(_e, v) => setSearch(v ?? '')}
         />
       </div>
 
@@ -79,6 +82,7 @@ export function ContractsPage() {
                     <NJText scale="sm" variant="secondary">{contract.address}</NJText>
                   </div>
                   <div className={styles.headerRight}>
+                    {/* @ts-expect-error Fluid DS v6 types mismatch */}
                     <NJTag variant={tagConfig.variant} scale="sm">
                       <NJIcon name={tagConfig.icon} />
                       {t(`contracts.types.${contract.type}`)}

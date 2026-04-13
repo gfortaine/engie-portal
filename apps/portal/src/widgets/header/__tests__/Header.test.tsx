@@ -19,6 +19,12 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, ...props }: { children: React.ReactNode; to?: string; className?: string }) => (
+    <a href={props.to} className={props.className}>{children}</a>
+  ),
+}));
+
 const mockSignOut = vi.fn();
 vi.mock('@/features/auth', () => ({
   useAppAuth: () => ({

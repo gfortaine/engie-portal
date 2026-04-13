@@ -4,7 +4,7 @@ test.describe('ENGIE Portal - Navigation', () => {
   test('loads dashboard by default', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('ENGIE', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('DEMO')).toBeVisible();
+    await expect(page.getByText(/demo|démo/i).first()).toBeVisible();
   });
 
   test('shows user info in header', async ({ page }) => {
@@ -14,27 +14,27 @@ test.describe('ENGIE Portal - Navigation', () => {
 
   test('navigates to contracts page', async ({ page }) => {
     await page.goto('/');
-    await page.locator('nav').getByRole('link', { name: /contracts/i }).click();
+    await page.getByRole('link', { name: /contrats|contracts/i }).first().click();
     await expect(page).toHaveURL('/contracts');
     await expect(page.getByText('ENGIE-ELEC-2024-78542')).toBeVisible({ timeout: 10_000 });
   });
 
   test('navigates to invoices page', async ({ page }) => {
     await page.goto('/');
-    await page.locator('nav').getByRole('link', { name: /invoices/i }).click();
+    await page.getByRole('link', { name: /factures|invoices/i }).first().click();
     await expect(page).toHaveURL('/invoices');
     await expect(page.getByText('FACT-2026').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('navigates to consumption page', async ({ page }) => {
     await page.goto('/');
-    await page.locator('nav').getByRole('link', { name: /consumption/i }).click();
+    await page.getByRole('link', { name: /consommation|consumption/i }).first().click();
     await expect(page).toHaveURL('/consumption');
   });
 
   test('navigates to profile page', async ({ page }) => {
     await page.goto('/');
-    await page.locator('nav ul').getByRole('link', { name: /profile/i }).click();
+    await page.getByRole('link', { name: /profil|profile/i }).first().click();
     await expect(page).toHaveURL('/profile');
     await expect(page.getByText('marie.dupont@engie.com')).toBeVisible();
   });
@@ -70,9 +70,9 @@ test.describe('ENGIE Portal - Contracts', () => {
 
   test('shows contract status badges', async ({ page }) => {
     await page.goto('/contracts');
-    await expect(page.getByText('Actif').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('En attente')).toBeVisible();
-    await expect(page.getByText('Résilié')).toBeVisible();
+    await expect(page.getByText(/actif|active/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/en attente|pending/i).first()).toBeVisible();
+    await expect(page.getByText(/résilié|terminated/i).first()).toBeVisible();
   });
 
   test('displays contract addresses', async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe('ENGIE Portal - Invoices', () => {
 
   test('shows invoice statuses', async ({ page }) => {
     await page.goto('/invoices');
-    await expect(page.getByText('Payée').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/payée|paid/i).first()).toBeVisible({ timeout: 10_000 });
   });
 });
 

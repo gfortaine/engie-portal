@@ -4,7 +4,15 @@
     "loading": "Chargement...",
     "error": "Erreur",
     "notifications": "Notifications",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "breadcrumb": "Fil d'Ariane"
+  },
+  "status": {
+    "active": "Actif",
+    "pending": "En attente",
+    "terminated": "Résilié",
+    "paid": "Payée",
+    "overdue": "En retard"
   },
   "auth": {
     "login": "Connexion",

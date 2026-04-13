@@ -43,6 +43,8 @@
     "@tanstack/router-plugin": "^1.120.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "catalog:default",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.0",
     "eslint": "^9.27.0",
     "eslint-plugin-boundaries": "^5.0.0",

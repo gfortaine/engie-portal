@@ -4,7 +4,15 @@
     "loading": "Loading...",
     "error": "Error",
     "notifications": "Notifications",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "breadcrumb": "Breadcrumb"
+  },
+  "status": {
+    "active": "Active",
+    "pending": "Pending",
+    "terminated": "Terminated",
+    "paid": "Paid",
+    "overdue": "Overdue"
   },
   "auth": {
     "login": "Sign in",

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useGetContractsQuery } from '@/entities/contract';
-import { NJCard, NJCardBody, NJHeading, NJText, NJDivider, NJTag, NJIcon } from '@engie-group/fluid-design-system-react';
+import { NJCard, NJCardBody, NJHeading, NJText, NJDivider, NJTag, NJIcon, NJInlineMessage } from '@engie-group/fluid-design-system-react';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import styles from './ContractOverviewWidget.module.css';
@@ -13,7 +13,7 @@ const ENERGY_ICON: Record<string, { name: string; tagVariant: 'blue' | 'orange' 
 
 export function ContractOverviewWidget() {
   const { t } = useTranslation();
-  const { data: contracts, isLoading } = useGetContractsQuery();
+  const { data: contracts, isLoading, error } = useGetContractsQuery();
 
   if (isLoading) {
     return (
@@ -25,6 +25,20 @@ export function ContractOverviewWidget() {
               <Skeleton key={i} height={72} />
             ))}
           </div>
+        </NJCardBody>
+      </NJCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <NJCard>
+        <NJCardBody>
+          <NJHeading scale="sm">{t('dashboard.contractOverview')}</NJHeading>
+          {/* @ts-expect-error Fluid DS v6 types mismatch */}
+          <NJInlineMessage variant="danger">
+            {t('errors.loadFailed')}
+          </NJInlineMessage>
         </NJCardBody>
       </NJCard>
     );
@@ -67,6 +81,7 @@ export function ContractOverviewWidget() {
                 <NJText scale="sm" variant="secondary">{contract.address}</NJText>
               </div>
               <div className={styles.contractMeta}>
+                {/* @ts-expect-error Fluid DS v6 types mismatch */}
                 <NJTag variant={ENERGY_ICON[contract.type]?.tagVariant ?? 'blue'} scale="sm">
                   <NJIcon name={ENERGY_ICON[contract.type]?.name ?? 'bolt'} />
                 </NJTag>

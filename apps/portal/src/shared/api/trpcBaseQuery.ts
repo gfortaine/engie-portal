@@ -3,7 +3,7 @@ import { trpcClient } from './trpcClient';
 
 type TrpcQueryFn = (client: typeof trpcClient) => Promise<unknown>;
 
-interface TrpcError {
+export interface TrpcError {
   status: string;
   message: string;
   data?: unknown;

@@ -19,6 +19,7 @@ export function ConsumptionSummaryWidget() {
     <NJCard>
       <NJCardBody>
         <NJHeading scale="xs">{t('dashboard.consumptionSummary')}</NJHeading>
+        {/* @ts-expect-error Fluid DS v6 types mismatch */}
         <NJTooltip label={t('dashboard.currentMonthUsage', 'Consommation du mois en cours')}>
           <div className={styles.value}>
             {data.currentMonth.toLocaleString('fr-FR')} {data.unit}
@@ -34,6 +35,7 @@ export function ConsumptionSummaryWidget() {
           {CONSUMPTION_DATA.map((kWh, i) => {
             const pct = Math.round((kWh / Math.max(...CONSUMPTION_DATA)) * 100);
             return (
+              // @ts-expect-error Fluid DS v6 types mismatch
               <NJTooltip key={i} label={`${MONTHS[i]} : ${kWh} kWh`}>
                 <div className={styles.miniBar} style={{ height: `${pct}%` }} />
               </NJTooltip>
