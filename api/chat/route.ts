@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { streamText, tool } from 'ai';
-import { createGoogleGenerativeAI, google } from '@ai-sdk/google';
-import { openai } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 
 // ── Mock data (mirrors tRPC handler data) ──────────────────────────
@@ -177,18 +176,14 @@ const tools = {
 };
 
 // ── Model selection ────────────────────────────────────────────────
+// Gemini 3.1 Flash-Lite: $0.25/1M in, $1.50/1M out, 270 tok/s, 1M context
+// 76.5% BFCL v3 tool calling, 97% structured output compliance
+// Perfect for high-volume energy portal (10M+ customers)
 function getModel() {
-  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    return google('gemini-2.0-flash');
-  }
-  if (process.env.GEMINI_API_KEY) {
-    const g = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-    return g('gemini-2.0-flash');
-  }
-  if (process.env.OPENAI_API_KEY) {
-    return openai('gpt-4o-mini');
-  }
-  return null;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) return null;
+  const google = createGoogleGenerativeAI({ apiKey });
+  return google('gemini-3.1-flash-lite-preview');
 }
 
 // ── Vercel Serverless Handler ──────────────────────────────────────
@@ -203,7 +198,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('X-Vercel-AI-Data-Stream', 'v1');
     return res.status(200).end(
-      '0:"Bienvenue sur l\'assistant ENGIE ! 🌿\\n\\nJe suis en mode démo — pour activer l\'IA complète, configurez `GOOGLE_GENERATIVE_AI_API_KEY` ou `OPENAI_API_KEY`.\\n\\nEn attendant, explorez le portail pour gérer vos contrats, factures et consommation."\n'
+      '0:"Bienvenue sur l\'assistant ENGIE ! 🌿\\n\\nJe suis en mode démo — pour activer l\'IA complète, configurez `GEMINI_API_KEY`.\\n\\nEn attendant, explorez le portail pour gérer vos contrats, factures et consommation."\n'
     );
   }
 
