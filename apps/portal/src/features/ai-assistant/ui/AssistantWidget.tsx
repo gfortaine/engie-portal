@@ -101,12 +101,44 @@ const SESSION_STORAGE_KEY = 'genie-session-id';
 const SESSION_HISTORY_KEY = 'genie-sessions';
 
 /** Convert Vertex AI session events to AI SDK UIMessage format */
-function eventsToMessages(events: Array<{ author: string; content: { parts: Array<{ text: string }> } }>): Array<{ id: string; role: 'user' | 'assistant'; parts: Array<{ type: 'text'; text: string }> }> {
-  return events.map((evt, i) => ({
-    id: `restored-${i}`,
-    role: evt.author === 'user' ? 'user' as const : 'assistant' as const,
-    parts: evt.content.parts.map(p => ({ type: 'text' as const, text: p.text })),
-  }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function eventsToMessages(events: Array<{ author: string; content: { parts: Array<{ text: string }> } }>): Array<{ id: string; role: 'user' | 'assistant'; parts: Array<any> }> {
+  return events.map((evt, i) => {
+    const rawText = evt.content.parts.map(p => p.text).join('\n');
+    const role = evt.author === 'user' ? 'user' as const : 'assistant' as const;
+
+    // Detect JSON-encoded events (rich messages with tool results)
+    if (rawText.startsWith('__json:')) {
+      try {
+        const parsed = JSON.parse(rawText.slice(7));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const parts: any[] = [];
+        // Add text part if present
+        if (parsed.text) {
+          parts.push({ type: 'text', text: parsed.text });
+        }
+        // Restore tool call parts for genui rendering
+        for (const tr of parsed.toolResults ?? []) {
+          parts.push({
+            type: `tool-${tr.toolName}`,
+            toolCallId: `restored-tc-${i}-${tr.toolName}`,
+            toolName: tr.toolName,
+            state: 'output-available',
+            output: tr.result,
+          });
+        }
+        return { id: `restored-${i}`, role, parts: parts.length ? parts : [{ type: 'text', text: '' }] };
+      } catch {
+        // Fallback to plain text if JSON parsing fails
+      }
+    }
+
+    return {
+      id: `restored-${i}`,
+      role,
+      parts: evt.content.parts.map(p => ({ type: 'text' as const, text: p.text })),
+    };
+  });
 }
 
 export function AssistantWidget() {
@@ -209,10 +241,28 @@ export function AssistantWidget() {
       const res = await fetch('/api/sessions?userId=demo-user');
       if (!res.ok) return;
       const data = await res.json();
-      const sessions = (data.sessions ?? []).map((s: { name: string; createTime: string }) => {
-        const parts = s.name.split('/');
-        return { id: parts[parts.length - 1], createTime: s.createTime, preview: '' };
-      });
+      const sessions = await Promise.all(
+        (data.sessions ?? []).map(async (s: { name: string; createTime: string }) => {
+          const parts = s.name.split('/');
+          const id = parts[parts.length - 1] ?? s.name;
+          // Fetch first event to use as preview/title
+          let preview = '';
+          try {
+            const evtRes = await fetch(`/api/sessions?sessionId=${encodeURIComponent(id)}`);
+            if (evtRes.ok) {
+              const evtData = await evtRes.json();
+              const firstUserEvent = evtData.events?.find(
+                (e: { author: string }) => e.author === 'user',
+              );
+              if (firstUserEvent) {
+                const text = firstUserEvent.content?.parts?.[0]?.text ?? '';
+                preview = text.length > 50 ? text.slice(0, 47) + '…' : text;
+              }
+            }
+          } catch { /* ignore */ }
+          return { id, createTime: s.createTime, preview };
+        }),
+      );
       setSessionList(sessions);
     } catch {
       // silently ignore
@@ -416,7 +466,7 @@ export function AssistantWidget() {
                       <span className="genie-history__item-date">
                         {new Date(s.createTime).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className="genie-history__item-id">Session {s.id.slice(-6)}</span>
+                      <span className="genie-history__item-preview">{s.preview || 'Conversation sans titre'}</span>
                     </button>
                     <button
                       className="genie-history__item-delete"

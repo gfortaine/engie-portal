@@ -579,10 +579,13 @@
   color: var(--nj-semantic-color-text-neutral-secondary-default, #666);
 }
 
-.genie-history__item-id {
+.genie-history__item-preview {
   font-size: 13px;
   font-weight: 500;
   color: var(--nj-semantic-color-text-neutral-primary-default, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .genie-history__item-delete {

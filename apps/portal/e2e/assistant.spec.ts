@@ -85,8 +85,8 @@ test.describe('AI Assistant — Génie', () => {
     await input.fill('Bonjour, test de persistance');
     await input.press('Enter');
 
-    // Wait for response
-    await page.waitForTimeout(10000);
+    // Wait for response (server creates session + persists events, may take longer)
+    await page.waitForTimeout(15000);
 
     // Verify messages exist
     const messagesBeforeRefresh = page.locator('.genie-message');

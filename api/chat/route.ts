@@ -222,7 +222,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // Persist user message to Vertex AI session
+    // Persist user message to Vertex AI session (full JSON for restore fidelity)
     const lastUserMsg = messages[messages.length - 1];
     const userText = lastUserMsg?.parts
       ?.filter((p: { type: string }) => p.type === 'text')
@@ -231,9 +231,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const invocationId = `inv-${Date.now()}`;
 
     if (sessionId && userText) {
-      appendEvent(sessionId, 'user', userText, invocationId).catch((e) =>
-        console.warn('[chat] Failed to persist user event:', e),
-      );
+      try {
+        await appendEvent(sessionId, 'user', userText, invocationId);
+      } catch (e) {
+        console.warn('[chat] Failed to persist user event:', e);
+      }
     }
 
     // Convert v6 UIMessages (parts array) to CoreMessages (content string) for streamText
@@ -248,12 +250,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       onError: (error) => {
         console.error('streamText error:', error);
       },
-      onFinish: async ({ text }) => {
+      onFinish: async ({ text, steps }) => {
         // Persist assistant response to Vertex AI session
-        if (sessionId && text) {
-          appendEvent(sessionId, 'agent', text, invocationId).catch((e) =>
-            console.warn('[chat] Failed to persist assistant event:', e),
-          );
+        // Include tool call info so restored sessions show genui cards
+        if (sessionId) {
+          // Collect tool results from all steps for genui restore
+          const toolResults: Array<{ toolName: string; result: unknown }> = [];
+          for (const step of steps) {
+            for (const tc of step.toolCalls ?? []) {
+              const tr = step.toolResults?.find(
+                (r: { toolCallId: string }) => r.toolCallId === tc.toolCallId,
+              );
+              if (tr) {
+                toolResults.push({ toolName: tc.toolName, result: tr.result });
+              }
+            }
+          }
+
+          // If we have tool results, store as JSON for rich restore
+          const payload = toolResults.length > 0
+            ? `__json:${JSON.stringify({ text: text || '', toolResults })}`
+            : text || '';
+
+          if (payload) {
+            try {
+              await appendEvent(sessionId, 'agent', payload, invocationId);
+            } catch (e) {
+              console.warn('[chat] Failed to persist assistant event:', e);
+            }
+          }
         }
       },
     });
