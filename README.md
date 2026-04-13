@@ -1,7 +1,7 @@
 # ENGIE Customer Portal
 
-[![CI](https://github.com/YOUR_ORG/engie-portal/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/engie-portal/actions/workflows/ci.yml)
-[![Deploy](https://github.com/YOUR_ORG/engie-portal/actions/workflows/deploy.yml/badge.svg)](https://github.com/YOUR_ORG/engie-portal/actions/workflows/deploy.yml)
+[![CI](https://github.com/gfortaine/engie-portal/actions/workflows/ci.yml/badge.svg)](https://github.com/gfortaine/engie-portal/actions/workflows/ci.yml)
+[![Deploy](https://github.com/gfortaine/engie-portal/actions/workflows/deploy.yml/badge.svg)](https://github.com/gfortaine/engie-portal/actions/workflows/deploy.yml)
 
 > Enterprise customer portal for ENGIE's Sales-to-Cash modernization program. React 19 SPA with type-safe BFF, built on ENGIE's official Fluid Design System.
 
@@ -157,7 +157,7 @@ Using the **official** `@engie-group/fluid-design-system-react` v6 (27+ componen
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_ORG/engie-portal.git
+git clone https://github.com/gfortaine/engie-portal.git
 cd engie-portal
 
 # Install dependencies
