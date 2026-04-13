@@ -2,18 +2,24 @@
   "common": {
     "demo": "Démo",
     "loading": "Chargement...",
-    "error": "Erreur"
+    "error": "Erreur",
+    "notifications": "Notifications",
+    "cancel": "Annuler"
   },
   "auth": {
     "login": "Connexion",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "logoutConfirmTitle": "Déconnexion",
+    "logoutConfirm": "Se déconnecter",
+    "logoutConfirmMessage": "Êtes-vous sûr de vouloir vous déconnecter ?"
   },
   "nav": {
     "dashboard": "Tableau de bord",
     "contracts": "Contrats",
     "invoices": "Factures",
     "consumption": "Consommation",
-    "profile": "Profil"
+    "profile": "Profil",
+    "collapse": "Réduire"
   },
   "dashboard": {
     "welcome": "Bonjour, {{name}}",
@@ -24,6 +30,7 @@
     "monthlyTotal": "Mensualité totale",
     "consumptionSummary": "Consommation ce mois",
     "vsLastMonth": "vs mois précédent",
+    "currentMonthUsage": "Consommation du mois en cours",
     "quickActions": "Actions rapides",
     "actions": {
       "viewInvoices": "Voir mes factures",
@@ -37,6 +44,9 @@
     "type": "Type",
     "meter": "Compteur",
     "monthlyAmount": "Mensualité",
+    "details": "Détails du contrat",
+    "search": "Rechercher un contrat",
+    "startDate": "Date de début",
     "types": {
       "electricity": "Électricité",
       "gas": "Gaz",
@@ -52,13 +62,18 @@
     "amount": "Montant",
     "status": "Statut",
     "actions": "Actions",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "search": "Rechercher une facture"
   },
   "consumption": {
     "title": "Ma consommation",
     "total": "Consommation totale",
     "vsPreviousPeriod": "vs période précédente",
-    "dailyBreakdown": "Détail journalier"
+    "dailyBreakdown": "Détail journalier",
+    "period": "Période",
+    "monthlyGoal": "Objectif mensuel",
+    "onTrack": "Vous êtes dans les limites",
+    "overBudget": "Objectif dépassé"
   },
   "profile": {
     "title": "Mon profil",
@@ -67,7 +82,9 @@
     "tenant": "Espace client",
     "roles": "Rôles",
     "preferences": "Préférences",
-    "language": "Langue"
+    "language": "Langue",
+    "notifications": "Notifications",
+    "emailNotifications": "Notifications par email"
   },
   "errors": {
     "loadFailed": "Impossible de charger les données. Veuillez réessayer."

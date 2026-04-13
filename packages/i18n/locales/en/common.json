@@ -2,18 +2,24 @@
   "common": {
     "demo": "Demo",
     "loading": "Loading...",
-    "error": "Error"
+    "error": "Error",
+    "notifications": "Notifications",
+    "cancel": "Cancel"
   },
   "auth": {
     "login": "Sign in",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "logoutConfirmTitle": "Sign out",
+    "logoutConfirm": "Sign out",
+    "logoutConfirmMessage": "Are you sure you want to sign out?"
   },
   "nav": {
     "dashboard": "Dashboard",
     "contracts": "Contracts",
     "invoices": "Invoices",
     "consumption": "Consumption",
-    "profile": "Profile"
+    "profile": "Profile",
+    "collapse": "Collapse"
   },
   "dashboard": {
     "welcome": "Hello, {{name}}",
@@ -24,6 +30,7 @@
     "monthlyTotal": "Monthly total",
     "consumptionSummary": "This month's consumption",
     "vsLastMonth": "vs last month",
+    "currentMonthUsage": "Current month usage",
     "quickActions": "Quick Actions",
     "actions": {
       "viewInvoices": "View invoices",
@@ -37,6 +44,9 @@
     "type": "Type",
     "meter": "Meter",
     "monthlyAmount": "Monthly amount",
+    "details": "Contract details",
+    "search": "Search contracts",
+    "startDate": "Start date",
     "types": {
       "electricity": "Electricity",
       "gas": "Gas",
@@ -52,13 +62,18 @@
     "amount": "Amount",
     "status": "Status",
     "actions": "Actions",
-    "download": "Download"
+    "download": "Download",
+    "search": "Search invoices"
   },
   "consumption": {
     "title": "My consumption",
     "total": "Total consumption",
     "vsPreviousPeriod": "vs previous period",
-    "dailyBreakdown": "Daily breakdown"
+    "dailyBreakdown": "Daily breakdown",
+    "period": "Period",
+    "monthlyGoal": "Monthly goal",
+    "onTrack": "You are within limits",
+    "overBudget": "Goal exceeded"
   },
   "profile": {
     "title": "My profile",
@@ -67,7 +82,9 @@
     "tenant": "Customer space",
     "roles": "Roles",
     "preferences": "Preferences",
-    "language": "Language"
+    "language": "Language",
+    "notifications": "Notifications",
+    "emailNotifications": "Email notifications"
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."
