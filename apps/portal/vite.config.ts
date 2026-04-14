@@ -26,12 +26,15 @@ export default defineConfig(({ mode: _mode }) => ({
   },
   server: {
     port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:4000',
-        changeOrigin: true,
+    // Only proxy /api when NOT running under vercel dev (which sets PORT)
+    ...(process.env.PORT ? {} : {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
+        },
       },
-    },
+    }),
   },
   build: {
     target: 'esnext',
