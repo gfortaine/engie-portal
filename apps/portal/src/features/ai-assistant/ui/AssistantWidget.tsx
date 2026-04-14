@@ -269,10 +269,14 @@ function AssistantWidgetInner() {
       if (!msgs?.length) return false;
       const lastMsg = msgs[msgs.length - 1];
       if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.parts) return false;
-      // Send when all tool parts have been responded to (no pending approvals)
-      return lastMsg.parts.some(
+      const hasApprovalResponded = lastMsg.parts.some(
         (p) => 'state' in p && p.state === 'approval-responded',
       );
+      // Only trigger if approval was responded but tool output hasn't arrived yet
+      const hasToolOutput = lastMsg.parts.some(
+        (p) => 'state' in p && (p.state === 'output-available' || p.state === 'done'),
+      );
+      return hasApprovalResponded && !hasToolOutput;
     },
   });
 
@@ -707,7 +711,7 @@ function AssistantWidgetInner() {
                             </div>
                             <div className="genie-approval__tool">
                               <strong>{toolName === 'suggestSavings' ? 'Optimisation contrat' : toolName}</strong>
-                              {toolPart.input != null && (
+                              {toolPart.input != null && Object.keys(toolPart.input as Record<string, unknown>).length > 0 && (
                                 <pre className="genie-approval__args">
                                   {JSON.stringify(toolPart.input as Record<string, unknown>, null, 2)}
                                 </pre>
@@ -731,7 +735,7 @@ function AssistantWidgetInner() {
                         );
                       }
 
-                      if (toolPart.state === 'output-available' || toolPart.state === 'result') {
+                      if (toolPart.state === 'output-available' || (toolPart.state as string) === 'result') {
                         if (Component) {
                           return <SafeToolComponent key={toolPart.toolCallId} Component={Component} data={toolPart.output} toolName={toolName} />;
                         }
@@ -739,10 +743,13 @@ function AssistantWidgetInner() {
                         return null;
                       }
 
-                      // Any other state (e.g. output-error, pending) — show skeleton
-                      if (Component || toolPart.state !== 'approval-responded') {
-                        return <ToolSkeleton key={toolPart.toolCallId} toolName={toolName} />;
+                      // HITL: approval already responded — hide (auto-send in progress)
+                      if (toolPart.state === 'approval-responded') {
+                        return null;
                       }
+
+                      // Any other state (e.g. output-error, pending) — show skeleton
+                      return <ToolSkeleton key={toolPart.toolCallId} toolName={toolName} />;
                     }
 
                     return null;
