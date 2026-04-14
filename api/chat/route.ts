@@ -235,6 +235,11 @@ Capacités:
 - suggestSavings: Proposer des économies d'énergie personnalisées
 - renderDashboard: Générer un tableau de bord interactif (A2UI) avec des composants Fluid DS
 
+Après avoir utilisé un outil, résume toujours les données clés sous forme de **tableau markdown** (| colonne1 | colonne2 |) pour une lecture rapide, suivi d'un bref commentaire. Par exemple pour suggestSavings:
+| Recommandation | Économie | Difficulté |
+|---|---|---|
+| Heures creuses | -14.20 €/mois | 🟢 Facile |
+
 Pour renderDashboard, tu génères un tableau de bord A2UI avec ces composants disponibles:
 - FluidText: { text, variant: h1|h2|h3|h4|h5|body|caption }
 - FluidCard: { title?, children: [...ids] }
