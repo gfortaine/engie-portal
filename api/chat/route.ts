@@ -232,7 +232,27 @@ Capacités:
 - compareContracts: Comparer des contrats côte à côte
 - findContract: Rechercher un contrat par critères
 - getAlerts: Afficher les alertes et notifications
-- suggestSavings: Proposer des économies d'énergie personnalisées`;
+- suggestSavings: Proposer des économies d'énergie personnalisées
+- renderDashboard: Générer un tableau de bord interactif (A2UI) avec des composants Fluid DS
+
+Pour renderDashboard, tu génères un tableau de bord A2UI avec ces composants disponibles:
+- FluidText: { text, variant: h1|h2|h3|h4|h5|body|caption }
+- FluidCard: { title?, children: [...ids] }
+- FluidRow: { children: [...ids], gap? }
+- FluidColumn: { children: [...ids], gap? }
+- FluidBadge: { label, variant: neutral|success|warning|danger|information|discovery }
+- FluidTag: { label, variant: brand|grey|blue|teal|orange|red|green }
+- FluidProgress: { value (0-100), max?, label? }
+- FluidAlert: { message, severity: information|success|warning|error }
+- FluidButton: { label, variant: primary|secondary|subtle }
+- FluidIcon: { name (Material icon name) }
+- FluidDivider: {}
+
+Format A2UI v0.9: un objet { messages: [...] } avec:
+1. createSurface: { surfaceId, catalogId: "https://engie.design/fluid/a2ui/1.0" }
+2. updateComponents: { surfaceId, components: [{ id, component: "FluidText", ...props }] }
+3. updateDataModel: { surfaceId, path, value } (optionnel)
+Le composant racine DOIT avoir id "root".`;
 
 // ── Energy Domain Tools ────────────────────────────────────────────
 const tools = {
@@ -347,6 +367,142 @@ const tools = {
         totalPotentialSaving: Math.round(savings.reduce((sum, s) => sum + s.impactEuros, 0) * 100) / 100,
         recommendations: savings,
       };
+    },
+  }),
+
+  renderDashboard: tool({
+    description: "Génère un tableau de bord interactif avec des composants Fluid Design System via le protocole A2UI v0.9. Utilise cet outil pour présenter des données structurées sous forme de dashboard: résumés, KPI, listes, alertes. Idéal pour les demandes de type 'montre-moi un résumé', 'affiche mon tableau de bord', 'fais un récapitulatif'.",
+    inputSchema: z.object({
+      type: z.string().describe("Type de dashboard: 'summary', 'contracts', 'alerts', 'consumption', 'custom'"),
+      context: z.string().optional().describe("Contexte ou instruction supplémentaire pour personnaliser le dashboard"),
+    }),
+    execute: async ({ type, context: ctx }) => {
+      // Build A2UI messages based on dashboard type
+      const surfaceId = `dashboard-${type}`;
+      const catalogId = 'https://engie.design/fluid/a2ui/1.0';
+      const messages: Record<string, unknown>[] = [
+        { version: 'v0.9', createSurface: { surfaceId, catalogId } },
+      ];
+
+      if (type === 'summary' || type === 'custom') {
+        const contracts = mockContracts;
+        const active = contracts.filter(c => c.status === 'active');
+        const totalMonthly = active.reduce((s, c) => s + c.monthlyAmount, 0);
+
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', 'kpi-row', 'divider', 'alerts-card'] },
+              { id: 'title', component: 'FluidText', text: '📊 Tableau de bord énergie', variant: 'h2' },
+              { id: 'kpi-row', component: 'FluidRow', children: ['kpi-contracts', 'kpi-active', 'kpi-total'], gap: '12px' },
+              { id: 'kpi-contracts', component: 'FluidCard', title: 'Contrats', children: ['kpi-contracts-val'] },
+              { id: 'kpi-contracts-val', component: 'FluidText', text: `${contracts.length}`, variant: 'h1' },
+              { id: 'kpi-active', component: 'FluidCard', title: 'Actifs', children: ['kpi-active-val', 'kpi-active-badge'] },
+              { id: 'kpi-active-val', component: 'FluidText', text: `${active.length}`, variant: 'h1' },
+              { id: 'kpi-active-badge', component: 'FluidBadge', label: 'En service', variant: 'success' },
+              { id: 'kpi-total', component: 'FluidCard', title: 'Mensualité', children: ['kpi-total-val'] },
+              { id: 'kpi-total-val', component: 'FluidText', text: `${totalMonthly.toFixed(2)} €`, variant: 'h1' },
+              { id: 'divider', component: 'FluidDivider' },
+              { id: 'alerts-card', component: 'FluidCard', title: 'État des contrats', children: contracts.map((_, i) => `contract-${i}`) },
+              ...contracts.map((c, i) => ({
+                id: `contract-${i}`,
+                component: 'FluidRow',
+                children: [`contract-${i}-ref`, `contract-${i}-badge`],
+                gap: '8px',
+              })),
+              ...contracts.map((c, i) => ({
+                id: `contract-${i}-ref`,
+                component: 'FluidText',
+                text: `${c.reference} — ${c.address}`,
+                variant: 'body' as const,
+              })),
+              ...contracts.map((c, i) => ({
+                id: `contract-${i}-badge`,
+                component: 'FluidBadge',
+                label: c.status === 'active' ? 'Actif' : c.status === 'pending' ? 'En attente' : 'Résilié',
+                variant: c.status === 'active' ? 'success' : c.status === 'pending' ? 'warning' : 'danger',
+              })),
+            ],
+          },
+        });
+      } else if (type === 'alerts') {
+        const alerts = generateAlerts();
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', ...alerts.map((_, i) => `alert-${i}`)] },
+              { id: 'title', component: 'FluidText', text: '⚠️ Alertes et notifications', variant: 'h2' },
+              ...alerts.map((a, i) => ({
+                id: `alert-${i}`,
+                component: 'FluidAlert',
+                message: a.message,
+                severity: a.severity as 'info' | 'success' | 'warning' | 'danger',
+              })),
+            ],
+          },
+        });
+      } else if (type === 'contracts') {
+        const contracts = mockContracts;
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', ...contracts.map((_, i) => `card-${i}`)] },
+              { id: 'title', component: 'FluidText', text: '📋 Mes contrats', variant: 'h2' },
+              ...contracts.map((c, i) => ({
+                id: `card-${i}`,
+                component: 'FluidCard',
+                title: c.reference,
+                children: [`card-${i}-info`, `card-${i}-row`],
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-info`,
+                component: 'FluidText',
+                text: `${c.type === 'electricity' ? '⚡' : c.type === 'gas' ? '🔥' : '☀️'} ${c.address}`,
+                variant: 'body' as const,
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-row`,
+                component: 'FluidRow',
+                children: [`card-${i}-badge`, `card-${i}-amount`],
+                gap: '8px',
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-badge`,
+                component: 'FluidTag',
+                label: c.type === 'electricity' ? 'Électricité' : c.type === 'gas' ? 'Gaz' : 'Solaire',
+                variant: c.type === 'electricity' ? 'info' : c.type === 'gas' ? 'warning' : 'success',
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-amount`,
+                component: 'FluidText',
+                text: `${c.monthlyAmount.toFixed(2)} €/mois`,
+                variant: 'caption' as const,
+              })),
+            ],
+          },
+        });
+      } else {
+        // consumption or unknown — simple message
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', 'msg'] },
+              { id: 'title', component: 'FluidText', text: `📊 Dashboard: ${type}`, variant: 'h2' },
+              { id: 'msg', component: 'FluidAlert', message: ctx ?? 'Dashboard en cours de construction', severity: 'info' },
+            ],
+          },
+        });
+      }
+
+      return { messages };
     },
   }),
 };

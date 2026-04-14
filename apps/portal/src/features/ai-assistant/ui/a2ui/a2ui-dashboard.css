@@ -1,0 +1,55 @@
+/* A2UI Dashboard — scoped styling for A2UI surfaces inside Génie chat */
+
+.a2ui-dashboard {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 14px;
+}
+
+.a2ui-dashboard--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+}
+
+.a2ui-dashboard__placeholder {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Fluid DS inside A2UI — ensure cards look right */
+.a2ui-dashboard .nj-card {
+  margin: 0;
+  box-shadow: none;
+  border: 1px solid var(--nj-core-color-grey-200, #eee);
+}
+
+.a2ui-dashboard .nj-card__body {
+  padding: 12px 16px;
+}
+
+/* Compact badges/tags inside A2UI */
+.a2ui-dashboard .nj-badge,
+.a2ui-dashboard .nj-tag {
+  font-size: 0.75rem;
+}
+
+/* Progress bars inside A2UI */
+.a2ui-dashboard .nj-progress {
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* Inline messages */
+.a2ui-dashboard .nj-inline-message {
+  margin: 4px 0;
+  font-size: 0.85rem;
+}
+
+/* Buttons */
+.a2ui-dashboard .nj-btn {
+  font-size: 0.85rem;
+}

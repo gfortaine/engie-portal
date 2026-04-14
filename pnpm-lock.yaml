@@ -90,6 +90,9 @@ importers:
       '@a2ui/react':
         specifier: 0.9.0-alpha.0
         version: 0.9.0-alpha.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@3.25.76)
+      '@a2ui/web_core':
+        specifier: 0.9.1-alpha.0
+        version: 0.9.1-alpha.0
       '@ai-sdk/openai':
         specifier: ^3.0.52
         version: 3.0.52(zod@3.25.76)
