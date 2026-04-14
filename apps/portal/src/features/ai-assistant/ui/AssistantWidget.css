@@ -325,6 +325,75 @@
   margin-top: 0.4rem;
 }
 
+/* ── Markdown rendering ─────────────────────────────────────────── */
+.genie-markdown h1, .genie-markdown h2, .genie-markdown h3,
+.genie-markdown h4, .genie-markdown h5, .genie-markdown h6 {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.genie-markdown h3 { font-size: 0.85rem; }
+
+.genie-markdown strong { font-weight: 700; }
+
+.genie-markdown ul, .genie-markdown ol {
+  margin: 0.3rem 0;
+  padding-left: 1.4rem;
+}
+
+.genie-markdown li {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.15rem;
+}
+
+.genie-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.4rem 0;
+}
+
+.genie-markdown th, .genie-markdown td {
+  border: 1px solid var(--nj-core-color-grey-300, #ddd);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.genie-markdown th {
+  background: var(--nj-core-color-grey-200, #eee);
+  font-weight: 600;
+}
+
+.genie-markdown code {
+  background: var(--nj-core-color-grey-200, #eee);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.genie-markdown pre {
+  background: var(--nj-core-color-grey-200, #eee);
+  padding: 8px 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.4rem 0;
+}
+
+.genie-markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.genie-markdown blockquote {
+  border-left: 3px solid var(--nj-core-color-blue-800, #007ACD);
+  margin: 0.4rem 0;
+  padding: 4px 12px;
+  color: #555;
+}
+
 /* Generative UI inside messages — remove bubble background */
 .genie-message--assistant .genie-message__content:has(.genui-card),
 .genie-message--assistant .genie-message__content:has(.genui-skeleton),

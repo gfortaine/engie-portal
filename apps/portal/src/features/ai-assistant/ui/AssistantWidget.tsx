@@ -3,6 +3,8 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from '@tanstack/react-router';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   NJIcon,
   NJIconButton,
@@ -671,10 +673,8 @@ function AssistantWidgetInner() {
                       const text = part.text as string;
                       if (!text.trim()) return null;
                       return (
-                        <div key={`${message.id}-${index}`} className="genie-message__text">
-                          {text.split('\n').map((line, i) => (
-                            <p key={i}>{line}</p>
-                          ))}
+                        <div key={`${message.id}-${index}`} className="genie-message__text genie-markdown">
+                          <Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
                         </div>
                       );
                     }
@@ -731,7 +731,7 @@ function AssistantWidgetInner() {
                         );
                       }
 
-                      if (toolPart.state === 'output-available') {
+                      if (toolPart.state === 'output-available' || toolPart.state === 'result') {
                         if (Component) {
                           return <SafeToolComponent key={toolPart.toolCallId} Component={Component} data={toolPart.output} toolName={toolName} />;
                         }
@@ -779,7 +779,7 @@ function AssistantWidgetInner() {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={t('common.assistant_placeholder', 'Posez votre question...')}
+              placeholder="Posez votre question..."
               className="genie-panel__textarea"
               disabled={isLoading}
               rows={1}

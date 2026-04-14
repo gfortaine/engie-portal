@@ -35,8 +35,10 @@
     "react": "catalog:default",
     "react-dom": "catalog:default",
     "react-i18next": "^15.5.0",
+    "react-markdown": "^10.1.0",
     "react-oidc-context": "^3.3.0",
     "react-redux": "catalog:default",
+    "remark-gfm": "^4.0.1",
     "superjson": "^2.2.0",
     "zod": "catalog:default"
   },
