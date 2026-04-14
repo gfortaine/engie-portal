@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 async function login(page: Page) {
   await page.goto('/');
   await page.getByLabel(/adresse e-mail|email address/i).fill('marie.dupont@engie.com');
-  await page.getByLabel(/mot de passe|password/i).fill('Gén!e-ENGIE_2026$');
+  await page.locator('#login-password').fill('Gén!e-ENGIE_2026$');
   await page.getByRole('button', { name: /se connecter|sign in/i }).click();
   await expect(page.getByText(/demo|démo/i).first()).toBeVisible({ timeout: 10_000 });
 }

@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 async function login(page: Page) {
   await page.goto('/');
   await page.getByLabel(/adresse e-mail|email address/i).fill('marie.dupont@engie.com');
-  await page.getByLabel(/mot de passe|password/i).fill('Gén!e-ENGIE_2026$');
+  await page.locator('#login-password').fill('Gén!e-ENGIE_2026$');
   await page.getByRole('button', { name: /se connecter|sign in/i }).click();
   await expect(page.getByText(/demo|démo/i).first()).toBeVisible({ timeout: 10_000 });
 }
@@ -13,20 +13,20 @@ test.describe('ENGIE Portal - Login', () => {
     await page.goto('/');
     await expect(page.getByText(/espace client|customer portal/i)).toBeVisible();
     await expect(page.getByLabel(/adresse e-mail|email address/i)).toBeVisible();
-    await expect(page.getByLabel(/mot de passe|password/i)).toBeVisible();
+    await expect(page.locator('#login-password')).toBeVisible();
   });
 
   test('rejects invalid credentials', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel(/adresse e-mail|email address/i).fill('bad@email.com');
-    await page.getByLabel(/mot de passe|password/i).fill('wrong');
+    await page.locator('#login-password').fill('wrong');
     await page.getByRole('button', { name: /se connecter|sign in/i }).click();
     await expect(page.getByText(/identifiants incorrects|invalid credentials/i)).toBeVisible();
   });
 
   test('logs in with valid credentials', async ({ page }) => {
     await login(page);
-    await expect(page.getByText('Marie Dupont')).toBeVisible();
+    await expect(page.locator('header span').getByText('Marie Dupont')).toBeVisible();
   });
 
   test('session persists on page reload', async ({ page }) => {
