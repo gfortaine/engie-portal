@@ -208,7 +208,7 @@ export function AssistantWidget() {
 function AssistantWidgetInner() {
   const { t } = useTranslation();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(
     () => sessionStorage.getItem(SESSION_STORAGE_KEY),

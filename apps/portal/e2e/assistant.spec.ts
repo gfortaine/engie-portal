@@ -17,17 +17,10 @@ test.describe('AI Assistant — Génie', () => {
     page.on('pageerror', err => errors.push('PAGE_ERROR: ' + err.message));
 
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
 
-    // Find and click sidebar tab
-    const tab = page.locator('.genie-tab');
-    await expect(tab).toBeVisible();
-    await expect(tab).toContainText('Génie');
-    await tab.click();
-
-    // Panel should slide open
+    // Panel should be open by default
     const panel = page.locator('.genie-panel--open');
-    await expect(panel).toBeVisible();
+    await expect(panel).toBeVisible({ timeout: 10000 });
 
     // Welcome state should show
     await expect(page.locator('.genie-panel__welcome')).toBeVisible();
@@ -66,10 +59,7 @@ test.describe('AI Assistant — Génie', () => {
 
   test('suggested prompts trigger chat', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
-
-    const tab = page.locator('.genie-tab');
-    await tab.click();
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     // Click first suggestion
     const suggestion = page.locator('.genie-suggestion').first();
@@ -87,11 +77,9 @@ test.describe('AI Assistant — Génie', () => {
 
   test('session persists across page refresh', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
-    // Open Génie and send a message
-    const tab = page.locator('.genie-tab');
-    await tab.click();
+    // Send a message
     const input = page.locator('.genie-panel__textarea');
     await input.fill('Bonjour, test de persistance');
     await input.press('Enter');
@@ -112,11 +100,7 @@ test.describe('AI Assistant — Génie', () => {
 
     // Refresh the page
     await page.reload();
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
-
-    // Open Génie again
-    await tab.click();
-    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     // Wait for session restore
     await page.waitForTimeout(5000);
@@ -135,12 +119,7 @@ test.describe('AI Assistant — Génie', () => {
 
   test('history drawer shows sessions', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
-
-    // Open Génie
-    const tab = page.locator('.genie-tab');
-    await tab.click();
-    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     // Click history button
     const historyBtn = page.locator('[aria-label="Historique"]');
@@ -155,12 +134,7 @@ test.describe('AI Assistant — Génie', () => {
 
   test('generative UI renders tool cards for alert queries', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
-
-    // Open Génie
-    const tab = page.locator('.genie-tab');
-    await tab.click();
-    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     // Type a prompt that triggers getAlerts tool
     const input = page.locator('.genie-panel__textarea');
@@ -189,7 +163,7 @@ test.describe('AI Assistant — Génie', () => {
 
   test('tab shows Génie branding', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     const tab = page.locator('.genie-tab');
     await expect(tab).toBeVisible();
@@ -215,12 +189,7 @@ test.describe('AI Assistant — Génie', () => {
     });
 
     await page.goto('/');
-    await page.waitForSelector('.nj-sidebar', { timeout: 10000 });
-
-    // Open Génie
-    const tab = page.locator('.genie-tab');
-    await tab.click();
-    await page.waitForSelector('.genie-panel--open', { timeout: 5000 });
+    await page.waitForSelector('.genie-panel--open', { timeout: 10000 });
 
     // Type a prompt that triggers suggestSavings (needsApproval: true)
     const input = page.locator('.genie-panel__textarea');
