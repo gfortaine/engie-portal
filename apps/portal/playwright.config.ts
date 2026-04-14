@@ -21,22 +21,15 @@ export default defineConfig({
     },
   ],
   // Skip webServer when using an external server (PW_BASE_URL)
+  // Use vercel dev to serve both Vite SPA and serverless API functions (/api/chat, /api/sessions)
   ...(process.env.PW_BASE_URL
     ? {}
     : {
-        webServer: [
-          {
-            command: 'pnpm --filter @engie-portal/bff dev',
-            port: 4000,
-            reuseExistingServer: !process.env.CI,
-            timeout: 10_000,
-          },
-          {
-            command: 'pnpm --filter @engie-portal/portal dev',
-            port: 3000,
-            reuseExistingServer: !process.env.CI,
-            timeout: 10_000,
-          },
-        ],
+        webServer: {
+          command: 'cd ../.. && npx vercel dev --listen 3000',
+          port: 3000,
+          reuseExistingServer: !process.env.CI,
+          timeout: 20_000,
+        },
       }),
 });

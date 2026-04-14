@@ -60,6 +60,7 @@ import {
   ToolSkeleton,
 } from './genui';
 import './genui/genui.css';
+import { A2UIDashboard } from './a2ui';
 import './AssistantWidget.css';
 
 // Maps tool names to their generative UI components
@@ -71,6 +72,7 @@ const toolComponentMap: Record<string, React.ComponentType<{ data: any }>> = {
   findContract: ContractResultList,
   getAlerts: AlertsPanel,
   suggestSavings: SavingsRecommendation,
+  renderDashboard: A2UIDashboard,
 };
 
 // ── Context-aware suggestions per route ────────────────────────────

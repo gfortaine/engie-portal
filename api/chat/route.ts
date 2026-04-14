@@ -232,7 +232,32 @@ Capacités:
 - compareContracts: Comparer des contrats côte à côte
 - findContract: Rechercher un contrat par critères
 - getAlerts: Afficher les alertes et notifications
-- suggestSavings: Proposer des économies d'énergie personnalisées`;
+- suggestSavings: Proposer des économies d'énergie personnalisées
+- renderDashboard: Générer un tableau de bord interactif (A2UI) avec des composants Fluid DS
+
+Après avoir utilisé un outil, résume toujours les données clés sous forme de **tableau markdown** (| colonne1 | colonne2 |) pour une lecture rapide, suivi d'un bref commentaire. Par exemple pour suggestSavings:
+| Recommandation | Économie | Difficulté |
+|---|---|---|
+| Heures creuses | -14.20 €/mois | 🟢 Facile |
+
+Pour renderDashboard, tu génères un tableau de bord A2UI avec ces composants disponibles:
+- FluidText: { text, variant: h1|h2|h3|h4|h5|body|caption }
+- FluidCard: { title?, children: [...ids] }
+- FluidRow: { children: [...ids], gap? }
+- FluidColumn: { children: [...ids], gap? }
+- FluidBadge: { label, variant: neutral|success|warning|danger|information|discovery }
+- FluidTag: { label, variant: brand|grey|blue|teal|orange|red|green }
+- FluidProgress: { value (0-100), max?, label? }
+- FluidAlert: { message, severity: information|success|warning|error }
+- FluidButton: { label, variant: primary|secondary|subtle }
+- FluidIcon: { name (Material icon name) }
+- FluidDivider: {}
+
+Format A2UI v0.9: un objet { messages: [...] } avec:
+1. createSurface: { surfaceId, catalogId: "https://engie.design/fluid/a2ui/1.0" }
+2. updateComponents: { surfaceId, components: [{ id, component: "FluidText", ...props }] }
+3. updateDataModel: { surfaceId, path, value } (optionnel)
+Le composant racine DOIT avoir id "root".`;
 
 // ── Energy Domain Tools ────────────────────────────────────────────
 const tools = {
@@ -349,6 +374,278 @@ const tools = {
       };
     },
   }),
+
+  renderDashboard: tool({
+    description: "Génère un tableau de bord interactif avec des composants Fluid Design System via le protocole A2UI v0.9. Utilise cet outil pour présenter des données structurées sous forme de dashboard: résumés, KPI, listes, alertes. Idéal pour les demandes de type 'montre-moi un résumé', 'affiche mon tableau de bord', 'fais un récapitulatif'.",
+    inputSchema: z.object({
+      type: z.string().describe("Type de dashboard: 'summary', 'contracts', 'alerts', 'consumption', 'custom'"),
+      context: z.string().optional().describe("Contexte ou instruction supplémentaire pour personnaliser le dashboard"),
+    }),
+    execute: async ({ type, context: ctx }) => {
+      // Build A2UI messages based on dashboard type
+      const surfaceId = `dashboard-${type}`;
+      const catalogId = 'https://engie.design/fluid/a2ui/1.0';
+      const messages: Record<string, unknown>[] = [
+        { version: 'v0.9', createSurface: { surfaceId, catalogId } },
+      ];
+
+      if (type === 'summary' || type === 'custom') {
+        const contracts = mockContracts;
+        const active = contracts.filter(c => c.status === 'active');
+        const pending = contracts.filter(c => c.status === 'pending');
+        const totalMonthly = active.reduce((s, c) => s + c.monthlyAmount, 0);
+        const alerts = generateAlerts();
+        const invoices = generateInvoices();
+        const unpaid = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
+        const lastPaid = invoices.filter(i => i.status === 'paid').slice(0, 2);
+        const elecStats = generateConsumptionStats('ctr_001');
+        const gasStats = generateConsumptionStats('ctr_002');
+        const elecChange = elecStats.yearOverYear.changePercent;
+        const gasChange = gasStats.yearOverYear.changePercent;
+
+        // Build a comprehensive dashboard
+        const components: Record<string, unknown>[] = [
+          // Root layout
+          { id: 'root', component: 'FluidColumn', children: [
+            'title',
+            'kpi-row',
+            'divider-1',
+            'conso-section',
+            'divider-2',
+            'contracts-section',
+            'divider-3',
+            'invoices-section',
+            ...(alerts.length > 0 ? ['divider-4', 'alerts-section'] : []),
+          ] },
+
+          // Title
+          { id: 'title', component: 'FluidText', text: '📊 Tableau de bord énergie', variant: 'h2' },
+
+          // ── KPI Row ──
+          { id: 'kpi-row', component: 'FluidRow', children: ['kpi-contracts', 'kpi-monthly', 'kpi-invoices'], gap: '8px' },
+
+          { id: 'kpi-contracts', component: 'FluidCard', title: 'Contrats actifs', children: ['kpi-contracts-row'] },
+          { id: 'kpi-contracts-row', component: 'FluidRow', children: ['kpi-contracts-val', 'kpi-contracts-badge'], gap: '8px' },
+          { id: 'kpi-contracts-val', component: 'FluidText', text: `${active.length}/${contracts.length}`, variant: 'h1' },
+          { id: 'kpi-contracts-badge', component: 'FluidBadge', label: pending.length > 0 ? `${pending.length} en attente` : 'Tous actifs', variant: pending.length > 0 ? 'warning' : 'success' },
+
+          { id: 'kpi-monthly', component: 'FluidCard', title: 'Mensualité totale', children: ['kpi-monthly-val', 'kpi-monthly-detail'] },
+          { id: 'kpi-monthly-val', component: 'FluidText', text: `${totalMonthly.toFixed(2)} €`, variant: 'h1' },
+          { id: 'kpi-monthly-detail', component: 'FluidText', text: `⚡ ${active.find(c => c.type === 'electricity')?.monthlyAmount.toFixed(2) ?? '0'} € + 🔥 ${active.find(c => c.type === 'gas')?.monthlyAmount.toFixed(2) ?? '0'} €`, variant: 'caption' },
+
+          { id: 'kpi-invoices', component: 'FluidCard', title: 'Factures', children: ['kpi-invoices-row'] },
+          { id: 'kpi-invoices-row', component: 'FluidColumn', children: ['kpi-invoices-unpaid', 'kpi-invoices-paid'] },
+          { id: 'kpi-invoices-unpaid', component: 'FluidRow', children: ['kpi-inv-unpaid-badge', 'kpi-inv-unpaid-text'], gap: '6px' },
+          { id: 'kpi-inv-unpaid-badge', component: 'FluidBadge', label: `${unpaid.length}`, variant: unpaid.some(i => i.status === 'overdue') ? 'danger' : 'warning' },
+          { id: 'kpi-inv-unpaid-text', component: 'FluidText', text: unpaid.some(i => i.status === 'overdue') ? 'en retard' : 'en attente', variant: 'caption' },
+          { id: 'kpi-invoices-paid', component: 'FluidText', text: `${invoices.filter(i => i.status === 'paid').length} payées`, variant: 'caption' },
+
+          { id: 'divider-1', component: 'FluidDivider' },
+
+          // ── Consumption Section ──
+          { id: 'conso-section', component: 'FluidCard', title: '⚡ Consommation ce mois', children: ['conso-elec', 'conso-gas'] },
+
+          { id: 'conso-elec', component: 'FluidColumn', children: ['conso-elec-header', 'conso-elec-bar'] },
+          { id: 'conso-elec-header', component: 'FluidRow', children: ['conso-elec-icon', 'conso-elec-trend'], gap: '6px' },
+          { id: 'conso-elec-icon', component: 'FluidText', text: `Électricité — ${elecStats.currentMonth.total} ${elecStats.unit}`, variant: 'body' },
+          { id: 'conso-elec-trend', component: 'FluidBadge',
+            label: `${elecChange >= 0 ? '↑' : '↓'} ${Math.abs(elecChange)}%`,
+            variant: elecChange > 10 ? 'danger' : elecChange > 0 ? 'warning' : 'success',
+          },
+          { id: 'conso-elec-bar', component: 'FluidProgress', value: Math.min(Math.round((elecStats.currentMonth.total / (elecStats.previousMonth.total || 1)) * 100), 100), max: 100, label: 'vs. mois précédent' },
+
+          { id: 'conso-gas', component: 'FluidColumn', children: ['conso-gas-header', 'conso-gas-bar'] },
+          { id: 'conso-gas-header', component: 'FluidRow', children: ['conso-gas-icon', 'conso-gas-trend'], gap: '6px' },
+          { id: 'conso-gas-icon', component: 'FluidText', text: `Gaz — ${gasStats.currentMonth.total} ${gasStats.unit}`, variant: 'body' },
+          { id: 'conso-gas-trend', component: 'FluidBadge',
+            label: `${gasChange >= 0 ? '↑' : '↓'} ${Math.abs(gasChange)}%`,
+            variant: gasChange > 10 ? 'danger' : gasChange > 0 ? 'warning' : 'success',
+          },
+          { id: 'conso-gas-bar', component: 'FluidProgress', value: Math.min(Math.round((gasStats.currentMonth.total / (gasStats.previousMonth.total || 1)) * 100), 100), max: 100, label: 'vs. mois précédent' },
+
+          { id: 'divider-2', component: 'FluidDivider' },
+
+          // ── Contracts Section ──
+          { id: 'contracts-section', component: 'FluidCard', title: '📋 Mes contrats', children: contracts.map((_, i) => `ctr-${i}`) },
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}`,
+            component: 'FluidRow',
+            children: [`ctr-${i}-type`, `ctr-${i}-info`, `ctr-${i}-badge`],
+            gap: '6px',
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-type`,
+            component: 'FluidTag',
+            label: c.type === 'electricity' ? '⚡ Élec' : c.type === 'gas' ? '🔥 Gaz' : '☀️ Solaire',
+            variant: c.type === 'electricity' ? 'info' : c.type === 'gas' ? 'warning' : 'success',
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-info`,
+            component: 'FluidText',
+            text: `${c.reference} — ${c.address}${c.monthlyAmount > 0 ? ` — ${c.monthlyAmount.toFixed(2)} €/mois` : ''}`,
+            variant: 'body' as const,
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-badge`,
+            component: 'FluidBadge',
+            label: c.status === 'active' ? 'Actif' : c.status === 'pending' ? 'En attente' : 'Résilié',
+            variant: c.status === 'active' ? 'success' : c.status === 'pending' ? 'warning' : 'danger',
+          })),
+
+          { id: 'divider-3', component: 'FluidDivider' },
+
+          // ── Invoices Section ──
+          { id: 'invoices-section', component: 'FluidCard', title: '🧾 Dernières factures', children: [
+            ...unpaid.map((_, i) => `inv-unpaid-${i}`),
+            ...lastPaid.map((_, i) => `inv-paid-${i}`),
+          ] },
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}`,
+            component: 'FluidRow',
+            children: [`inv-unpaid-${i}-ref`, `inv-unpaid-${i}-amount`, `inv-unpaid-${i}-badge`],
+            gap: '6px',
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-ref`,
+            component: 'FluidText',
+            text: `${inv.reference} — ${inv.period}`,
+            variant: 'body' as const,
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-amount`,
+            component: 'FluidText',
+            text: `${inv.amount.toFixed(2)} €`,
+            variant: 'h4' as const,
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-badge`,
+            component: 'FluidBadge',
+            label: inv.status === 'overdue' ? '⚠️ En retard' : 'À payer',
+            variant: inv.status === 'overdue' ? 'danger' : 'warning',
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}`,
+            component: 'FluidRow',
+            children: [`inv-paid-${i}-ref`, `inv-paid-${i}-amount`, `inv-paid-${i}-badge`],
+            gap: '6px',
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-ref`,
+            component: 'FluidText',
+            text: `${inv.reference} — ${inv.period}`,
+            variant: 'body' as const,
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-amount`,
+            component: 'FluidText',
+            text: `${inv.amount.toFixed(2)} €`,
+            variant: 'caption' as const,
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-badge`,
+            component: 'FluidBadge',
+            label: '✓ Payée',
+            variant: 'success',
+          })),
+        ];
+
+        // ── Alerts Section (dynamic) ──
+        if (alerts.length > 0) {
+          components.push(
+            { id: 'divider-4', component: 'FluidDivider' },
+            { id: 'alerts-section', component: 'FluidColumn', children: ['alerts-title', ...alerts.map((_, i) => `alert-${i}`)] },
+            { id: 'alerts-title', component: 'FluidText', text: '🔔 Alertes et notifications', variant: 'h3' },
+            ...alerts.map((a, i) => ({
+              id: `alert-${i}`,
+              component: 'FluidAlert',
+              message: `${a.message} (${a.contractRef})`,
+              severity: a.severity as 'info' | 'success' | 'warning' | 'danger',
+            })),
+          );
+        }
+
+        messages.push({
+          version: 'v0.9',
+          updateComponents: { surfaceId, components },
+        });
+      } else if (type === 'alerts') {
+        const alerts = generateAlerts();
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', ...alerts.map((_, i) => `alert-${i}`)] },
+              { id: 'title', component: 'FluidText', text: '⚠️ Alertes et notifications', variant: 'h2' },
+              ...alerts.map((a, i) => ({
+                id: `alert-${i}`,
+                component: 'FluidAlert',
+                message: a.message,
+                severity: a.severity as 'info' | 'success' | 'warning' | 'danger',
+              })),
+            ],
+          },
+        });
+      } else if (type === 'contracts') {
+        const contracts = mockContracts;
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', ...contracts.map((_, i) => `card-${i}`)] },
+              { id: 'title', component: 'FluidText', text: '📋 Mes contrats', variant: 'h2' },
+              ...contracts.map((c, i) => ({
+                id: `card-${i}`,
+                component: 'FluidCard',
+                title: c.reference,
+                children: [`card-${i}-info`, `card-${i}-row`],
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-info`,
+                component: 'FluidText',
+                text: `${c.type === 'electricity' ? '⚡' : c.type === 'gas' ? '🔥' : '☀️'} ${c.address}`,
+                variant: 'body' as const,
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-row`,
+                component: 'FluidRow',
+                children: [`card-${i}-badge`, `card-${i}-amount`],
+                gap: '8px',
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-badge`,
+                component: 'FluidTag',
+                label: c.type === 'electricity' ? 'Électricité' : c.type === 'gas' ? 'Gaz' : 'Solaire',
+                variant: c.type === 'electricity' ? 'info' : c.type === 'gas' ? 'warning' : 'success',
+              })),
+              ...contracts.map((c, i) => ({
+                id: `card-${i}-amount`,
+                component: 'FluidText',
+                text: `${c.monthlyAmount.toFixed(2)} €/mois`,
+                variant: 'caption' as const,
+              })),
+            ],
+          },
+        });
+      } else {
+        // consumption or unknown — simple message
+        messages.push({
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId,
+            components: [
+              { id: 'root', component: 'FluidColumn', children: ['title', 'msg'] },
+              { id: 'title', component: 'FluidText', text: `📊 Dashboard: ${type}`, variant: 'h2' },
+              { id: 'msg', component: 'FluidAlert', message: ctx ?? 'Dashboard en cours de construction', severity: 'info' },
+            ],
+          },
+        });
+      }
+
+      return { messages };
+    },
+  }),
 };
 
 // ── Model selection ────────────────────────────────────────────────
@@ -359,7 +656,7 @@ function getModel() {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) return null;
   const google = createGoogleGenerativeAI({ apiKey });
-  return google('gemini-3.1-flash-lite-preview');
+  return google(process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview');
 }
 
 // ── Vercel Serverless Handler ──────────────────────────────────────
