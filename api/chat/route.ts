@@ -387,45 +387,181 @@ const tools = {
       if (type === 'summary' || type === 'custom') {
         const contracts = mockContracts;
         const active = contracts.filter(c => c.status === 'active');
+        const pending = contracts.filter(c => c.status === 'pending');
         const totalMonthly = active.reduce((s, c) => s + c.monthlyAmount, 0);
+        const alerts = generateAlerts();
+        const invoices = generateInvoices();
+        const unpaid = invoices.filter(i => i.status === 'pending' || i.status === 'overdue');
+        const lastPaid = invoices.filter(i => i.status === 'paid').slice(0, 2);
+        const elecStats = generateConsumptionStats('ctr_001');
+        const gasStats = generateConsumptionStats('ctr_002');
+        const elecChange = elecStats.yearOverYear.changePercent;
+        const gasChange = gasStats.yearOverYear.changePercent;
+
+        // Build a comprehensive dashboard
+        const components: Record<string, unknown>[] = [
+          // Root layout
+          { id: 'root', component: 'FluidColumn', children: [
+            'title',
+            'kpi-row',
+            'divider-1',
+            'conso-section',
+            'divider-2',
+            'contracts-section',
+            'divider-3',
+            'invoices-section',
+            ...(alerts.length > 0 ? ['divider-4', 'alerts-section'] : []),
+          ] },
+
+          // Title
+          { id: 'title', component: 'FluidText', text: '📊 Tableau de bord énergie', variant: 'h2' },
+
+          // ── KPI Row ──
+          { id: 'kpi-row', component: 'FluidRow', children: ['kpi-contracts', 'kpi-monthly', 'kpi-invoices'], gap: '8px' },
+
+          { id: 'kpi-contracts', component: 'FluidCard', title: 'Contrats actifs', children: ['kpi-contracts-row'] },
+          { id: 'kpi-contracts-row', component: 'FluidRow', children: ['kpi-contracts-val', 'kpi-contracts-badge'], gap: '8px' },
+          { id: 'kpi-contracts-val', component: 'FluidText', text: `${active.length}/${contracts.length}`, variant: 'h1' },
+          { id: 'kpi-contracts-badge', component: 'FluidBadge', label: pending.length > 0 ? `${pending.length} en attente` : 'Tous actifs', variant: pending.length > 0 ? 'warning' : 'success' },
+
+          { id: 'kpi-monthly', component: 'FluidCard', title: 'Mensualité totale', children: ['kpi-monthly-val', 'kpi-monthly-detail'] },
+          { id: 'kpi-monthly-val', component: 'FluidText', text: `${totalMonthly.toFixed(2)} €`, variant: 'h1' },
+          { id: 'kpi-monthly-detail', component: 'FluidText', text: `⚡ ${active.find(c => c.type === 'electricity')?.monthlyAmount.toFixed(2) ?? '0'} € + 🔥 ${active.find(c => c.type === 'gas')?.monthlyAmount.toFixed(2) ?? '0'} €`, variant: 'caption' },
+
+          { id: 'kpi-invoices', component: 'FluidCard', title: 'Factures', children: ['kpi-invoices-row'] },
+          { id: 'kpi-invoices-row', component: 'FluidColumn', children: ['kpi-invoices-unpaid', 'kpi-invoices-paid'] },
+          { id: 'kpi-invoices-unpaid', component: 'FluidRow', children: ['kpi-inv-unpaid-badge', 'kpi-inv-unpaid-text'], gap: '6px' },
+          { id: 'kpi-inv-unpaid-badge', component: 'FluidBadge', label: `${unpaid.length}`, variant: unpaid.some(i => i.status === 'overdue') ? 'danger' : 'warning' },
+          { id: 'kpi-inv-unpaid-text', component: 'FluidText', text: unpaid.some(i => i.status === 'overdue') ? 'en retard' : 'en attente', variant: 'caption' },
+          { id: 'kpi-invoices-paid', component: 'FluidText', text: `${invoices.filter(i => i.status === 'paid').length} payées`, variant: 'caption' },
+
+          { id: 'divider-1', component: 'FluidDivider' },
+
+          // ── Consumption Section ──
+          { id: 'conso-section', component: 'FluidCard', title: '⚡ Consommation ce mois', children: ['conso-elec', 'conso-gas'] },
+
+          { id: 'conso-elec', component: 'FluidColumn', children: ['conso-elec-header', 'conso-elec-bar'] },
+          { id: 'conso-elec-header', component: 'FluidRow', children: ['conso-elec-icon', 'conso-elec-trend'], gap: '6px' },
+          { id: 'conso-elec-icon', component: 'FluidText', text: `Électricité — ${elecStats.currentMonth.total} ${elecStats.unit}`, variant: 'body' },
+          { id: 'conso-elec-trend', component: 'FluidBadge',
+            label: `${elecChange >= 0 ? '↑' : '↓'} ${Math.abs(elecChange)}%`,
+            variant: elecChange > 10 ? 'danger' : elecChange > 0 ? 'warning' : 'success',
+          },
+          { id: 'conso-elec-bar', component: 'FluidProgress', value: Math.min(Math.round((elecStats.currentMonth.total / (elecStats.previousMonth.total || 1)) * 100), 100), max: 100, label: 'vs. mois précédent' },
+
+          { id: 'conso-gas', component: 'FluidColumn', children: ['conso-gas-header', 'conso-gas-bar'] },
+          { id: 'conso-gas-header', component: 'FluidRow', children: ['conso-gas-icon', 'conso-gas-trend'], gap: '6px' },
+          { id: 'conso-gas-icon', component: 'FluidText', text: `Gaz — ${gasStats.currentMonth.total} ${gasStats.unit}`, variant: 'body' },
+          { id: 'conso-gas-trend', component: 'FluidBadge',
+            label: `${gasChange >= 0 ? '↑' : '↓'} ${Math.abs(gasChange)}%`,
+            variant: gasChange > 10 ? 'danger' : gasChange > 0 ? 'warning' : 'success',
+          },
+          { id: 'conso-gas-bar', component: 'FluidProgress', value: Math.min(Math.round((gasStats.currentMonth.total / (gasStats.previousMonth.total || 1)) * 100), 100), max: 100, label: 'vs. mois précédent' },
+
+          { id: 'divider-2', component: 'FluidDivider' },
+
+          // ── Contracts Section ──
+          { id: 'contracts-section', component: 'FluidCard', title: '📋 Mes contrats', children: contracts.map((_, i) => `ctr-${i}`) },
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}`,
+            component: 'FluidRow',
+            children: [`ctr-${i}-type`, `ctr-${i}-info`, `ctr-${i}-badge`],
+            gap: '6px',
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-type`,
+            component: 'FluidTag',
+            label: c.type === 'electricity' ? '⚡ Élec' : c.type === 'gas' ? '🔥 Gaz' : '☀️ Solaire',
+            variant: c.type === 'electricity' ? 'info' : c.type === 'gas' ? 'warning' : 'success',
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-info`,
+            component: 'FluidText',
+            text: `${c.reference} — ${c.address}${c.monthlyAmount > 0 ? ` — ${c.monthlyAmount.toFixed(2)} €/mois` : ''}`,
+            variant: 'body' as const,
+          })),
+          ...contracts.map((c, i) => ({
+            id: `ctr-${i}-badge`,
+            component: 'FluidBadge',
+            label: c.status === 'active' ? 'Actif' : c.status === 'pending' ? 'En attente' : 'Résilié',
+            variant: c.status === 'active' ? 'success' : c.status === 'pending' ? 'warning' : 'danger',
+          })),
+
+          { id: 'divider-3', component: 'FluidDivider' },
+
+          // ── Invoices Section ──
+          { id: 'invoices-section', component: 'FluidCard', title: '🧾 Dernières factures', children: [
+            ...unpaid.map((_, i) => `inv-unpaid-${i}`),
+            ...lastPaid.map((_, i) => `inv-paid-${i}`),
+          ] },
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}`,
+            component: 'FluidRow',
+            children: [`inv-unpaid-${i}-ref`, `inv-unpaid-${i}-amount`, `inv-unpaid-${i}-badge`],
+            gap: '6px',
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-ref`,
+            component: 'FluidText',
+            text: `${inv.reference} — ${inv.period}`,
+            variant: 'body' as const,
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-amount`,
+            component: 'FluidText',
+            text: `${inv.amount.toFixed(2)} €`,
+            variant: 'h4' as const,
+          })),
+          ...unpaid.map((inv, i) => ({
+            id: `inv-unpaid-${i}-badge`,
+            component: 'FluidBadge',
+            label: inv.status === 'overdue' ? '⚠️ En retard' : 'À payer',
+            variant: inv.status === 'overdue' ? 'danger' : 'warning',
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}`,
+            component: 'FluidRow',
+            children: [`inv-paid-${i}-ref`, `inv-paid-${i}-amount`, `inv-paid-${i}-badge`],
+            gap: '6px',
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-ref`,
+            component: 'FluidText',
+            text: `${inv.reference} — ${inv.period}`,
+            variant: 'body' as const,
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-amount`,
+            component: 'FluidText',
+            text: `${inv.amount.toFixed(2)} €`,
+            variant: 'caption' as const,
+          })),
+          ...lastPaid.map((inv, i) => ({
+            id: `inv-paid-${i}-badge`,
+            component: 'FluidBadge',
+            label: '✓ Payée',
+            variant: 'success',
+          })),
+        ];
+
+        // ── Alerts Section (dynamic) ──
+        if (alerts.length > 0) {
+          components.push(
+            { id: 'divider-4', component: 'FluidDivider' },
+            { id: 'alerts-section', component: 'FluidColumn', children: ['alerts-title', ...alerts.map((_, i) => `alert-${i}`)] },
+            { id: 'alerts-title', component: 'FluidText', text: '🔔 Alertes et notifications', variant: 'h3' },
+            ...alerts.map((a, i) => ({
+              id: `alert-${i}`,
+              component: 'FluidAlert',
+              message: `${a.message} (${a.contractRef})`,
+              severity: a.severity as 'info' | 'success' | 'warning' | 'danger',
+            })),
+          );
+        }
 
         messages.push({
           version: 'v0.9',
-          updateComponents: {
-            surfaceId,
-            components: [
-              { id: 'root', component: 'FluidColumn', children: ['title', 'kpi-row', 'divider', 'alerts-card'] },
-              { id: 'title', component: 'FluidText', text: '📊 Tableau de bord énergie', variant: 'h2' },
-              { id: 'kpi-row', component: 'FluidRow', children: ['kpi-contracts', 'kpi-active', 'kpi-total'], gap: '12px' },
-              { id: 'kpi-contracts', component: 'FluidCard', title: 'Contrats', children: ['kpi-contracts-val'] },
-              { id: 'kpi-contracts-val', component: 'FluidText', text: `${contracts.length}`, variant: 'h1' },
-              { id: 'kpi-active', component: 'FluidCard', title: 'Actifs', children: ['kpi-active-val', 'kpi-active-badge'] },
-              { id: 'kpi-active-val', component: 'FluidText', text: `${active.length}`, variant: 'h1' },
-              { id: 'kpi-active-badge', component: 'FluidBadge', label: 'En service', variant: 'success' },
-              { id: 'kpi-total', component: 'FluidCard', title: 'Mensualité', children: ['kpi-total-val'] },
-              { id: 'kpi-total-val', component: 'FluidText', text: `${totalMonthly.toFixed(2)} €`, variant: 'h1' },
-              { id: 'divider', component: 'FluidDivider' },
-              { id: 'alerts-card', component: 'FluidCard', title: 'État des contrats', children: contracts.map((_, i) => `contract-${i}`) },
-              ...contracts.map((c, i) => ({
-                id: `contract-${i}`,
-                component: 'FluidRow',
-                children: [`contract-${i}-ref`, `contract-${i}-badge`],
-                gap: '8px',
-              })),
-              ...contracts.map((c, i) => ({
-                id: `contract-${i}-ref`,
-                component: 'FluidText',
-                text: `${c.reference} — ${c.address}`,
-                variant: 'body' as const,
-              })),
-              ...contracts.map((c, i) => ({
-                id: `contract-${i}-badge`,
-                component: 'FluidBadge',
-                label: c.status === 'active' ? 'Actif' : c.status === 'pending' ? 'En attente' : 'Résilié',
-                variant: c.status === 'active' ? 'success' : c.status === 'pending' ? 'warning' : 'danger',
-              })),
-            ],
-          },
+          updateComponents: { surfaceId, components },
         });
       } else if (type === 'alerts') {
         const alerts = generateAlerts();

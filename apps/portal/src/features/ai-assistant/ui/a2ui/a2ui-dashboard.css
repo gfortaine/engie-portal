@@ -23,18 +23,31 @@
 /* Fluid DS inside A2UI — ensure cards look right */
 .a2ui-dashboard .nj-card {
   margin: 0;
-  box-shadow: none;
-  border: 1px solid var(--nj-core-color-grey-200, #eee);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--nj-core-color-grey-200, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.a2ui-dashboard .nj-card__title {
+  background: var(--nj-core-color-grey-50, #f9fafb);
+  border-bottom: 1px solid var(--nj-core-color-grey-200, #e5e7eb);
+  padding: 10px 14px !important;
+}
+
+.a2ui-dashboard .nj-card__title h3 {
+  color: var(--nj-core-color-grey-800, #1f2937);
 }
 
 .a2ui-dashboard .nj-card__body {
-  padding: 12px 16px;
+  padding: 12px 14px;
 }
 
 /* Compact badges/tags inside A2UI */
 .a2ui-dashboard .nj-badge,
 .a2ui-dashboard .nj-tag {
   font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 /* Progress bars inside A2UI */
@@ -43,13 +56,31 @@
   border-radius: 3px;
 }
 
-/* Inline messages */
+/* Inline messages (alerts) */
 .a2ui-dashboard .nj-inline-message {
   margin: 4px 0;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
 }
 
 /* Buttons */
 .a2ui-dashboard .nj-btn {
   font-size: 0.85rem;
+}
+
+/* KPI cards — flex to fill row evenly */
+.a2ui-dashboard > div > div > div > .nj-card {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* Dividers — subtle spacing */
+.a2ui-dashboard .nj-divider {
+  margin: 4px 0;
+  opacity: 0.5;
+}
+
+/* Row items — ensure badge/tag vertical alignment */
+.a2ui-dashboard [style*="flex-direction: row"] {
+  align-items: center;
 }
